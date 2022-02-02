@@ -11,69 +11,72 @@ typedef int PESO;
 typedef struct adjacencia {
     int vertice; // vertice de destino
     PESO peso; // peso associado a aresta que leva ao vertice de destino
-    struct adjacencia *prox; // O próximo elemento da lista de adjacencias
+    struct adjacencia *prox; // O prÃ³ximo elemento da lista de adjacencias
 }ADJACENCIA;
 
 typedef struct vertice {
-    /* Dados armazenados vão aqui */
-    ADJACENCIA *cab; //possui apenas a cabeça da lista de adjacencia
+    /* Dados armazenados vÃ£o aqui */
+    ADJACENCIA *cab; //possui apenas a cabeÃ§a da lista de adjacencia
 }VERTICE;
 
 typedef struct grafo {
-    int vertices; // numero de vertice total do grafo     /*Apesar de não ser nescessario guardar o numero de vertices  e arestas, o fazemos, pois caso quisermos*/
-    int arestas; // numero de arestas totais do grafo  	/*saber desta informação, teriamos que percorrer toda a estrutura. Parece melhor perder 8bits de memória salvando isto ;)*/
-    VERTICE *adj; // Arranjo de vertices da estrutura (linha 22)
+    int vertices; // numero de vertice total do grafo
+    int arestas; // numero de arestas totais do grafo
+    VERTICE *adj; // Arranjo de vertices da estrutura
 }GRAFO;
 
-/**função para criar um GRAFO**/
-GRAFO *criaGrafo (int v) {
+/**funÃ§Ã£o para criar um GRAFO**/
+GRAFO *criaGrafo (int qtdvert) {
 	int i;
 
-	GRAFO *g = (GRAFO *)malloc(sizeof(GRAFO)); //aloca espaço para estrtura grafo
-	g->vertices = v; //atualizo o numero de vertice
-	g->arestas = 0;  //atualizo o numero de vertice
-	g->adj = (VERTICE *)malloc(v*sizeof(VERTICE)); //ler abaixo
-	//Dentro da estrturua tem só o arranjo para o ponteiro de vertice, não o arranjo em si
-	// então aloco o arranjo com (v) o numero de vertice desejado
-	for (i=0; i<v; i++){
-		g->adj[i].cab=NULL; //coloco NULL em todas arestas
+	GRAFO *graph = (GRAFO *)malloc(sizeof(GRAFO)); //aloca espaÃ§o para estrtura grafo
+	graph->vertices = qtdvert; //atualizo o numero de vertice
+	graph->arestas = 0;  //atualizo o numero de vertice
+	graph->adj = (VERTICE *)malloc(qtdvert*sizeof(VERTICE));
+	//Dentro da estrturua tem sÃ³ o arranjo para o ponteiro de vertice, nÃ£o o arranjo em si
+	// entÃ£o aloco o arranjo com (v) o numero de vertice desejado
+	for (i=0; i<qtdvert; i++){
+		graph->adj[i].cab=NULL; //coloco NULL em todas arestas
 	}
-	return(g);
+	return(graph);
 }
 
-/**função para adicionar arestas no GRAFO**/
+/**funÃ§Ã£o para adicionar arestas no GRAFO**/
 
 ADJACENCIA *criaAdj(int v, int peso){
-	ADJACENCIA *temp = (ADJACENCIA *) malloc (sizeof(ADJACENCIA)); //aloca espaço para um nó
+	ADJACENCIA *temp = (ADJACENCIA *) malloc (sizeof(ADJACENCIA)); //aloca espaÃ§o para um nÃ³
 	temp->vertice =v; //vertice alvo da adjacencia
 	temp->peso = peso; //peso da aresta
 	temp->prox = NULL;
-	return(temp); //retorno endereço da adjacencia
+	return(temp); //retorno endereÃ§o da adjacencia
 }
 
-bool criaAresta(GRAFO *gr, int vi, int vf, PESO p) { //vai de vi a vf
-	if(!gr) return (false);  //validações se o grafo existe
-	if((vf<0)||(vf >= gr->vertices))return(false); //validações se os valores não são neg
-	if((vi<0)||(vf >= gr->vertices))return(false); //ou maiores que o numero de vértice do grafo
+bool criaAresta(GRAFO *graph, int vi, int vf, PESO p) { //vai de vi a vf
+	if(!graph) return (false);  //validaÃ§Ãµes se o grafo existe
+	if((vf<0)||(vf >= graph->vertices))return(false); //validaÃ§Ãµes se os valores nÃ£o sÃ£o neg
+	if((vi<0)||(vf >= graph->vertices))return(false); //ou maiores que o numero de vÃ©rtice do grafo
 
-	ADJACENCIA *novo = criaAdj(vf,p); //crio adjacencia com o vértice final e o peso
-	//coloco a adjacencia na lista do vértice inicial
-	novo->prox = gr->adj[vi].cab; //o campo prox da adjacencia vai receber a cabeça da lista
-	gr->adj[vi].cab=novo; // e a cabeça da lista passa a ser o novo elemento
-	gr->arestas++; // atualizo o numero de aresta no grafo
+	ADJACENCIA *novo = criaAdj(vf,p); //crio adjacencia com o vÃ©rtice final e o peso
+	ADJACENCIA *volta = criaAdj(vi,p); // criei a volta pois trata-se de uma grafo nÃ£o direcionado
+	//coloco a adjacencia na lista do vÃ©rtice inicial
+	novo->prox = graph->adj[vi].cab;
+	volta->prox = graph->adj[vf].cab; //o campo prox da adjacencia vai receber a cabeÃ§a da lista
+	graph->adj[vi].cab=novo;
+	graph->adj[vf].cab=volta; // e a cabeÃ§a da lista passa a ser o novo elemento
+	graph->arestas++; // atualizo o numero de aresta no grafo
 	return (true);
 }
 
 void imprime(GRAFO *gr){
-	//validações se o grafo existe
+	//validaÃ§Ãµes se o grafo existe
 
-	printf("Vertices: %d. Arestas: %d. \n",gr->vertices,gr->arestas); //imprime numero de vértice e arestas
+	printf("Vertices: %d.\nArestas: %d. \n",gr->vertices,gr->arestas); //imprime numero de vÃ©rtice e arestas
 	int i;
 
 	for(i=0; i<gr->vertices; i++){
 		printf("v%d: ",i+1); //Imprimo em qual aresta estou
-		ADJACENCIA *ad = gr->adj[i].cab; //chamo a cabeça da lista de adjacencia desta aresta
-			while(ad){ //enquanto as adjacencias não forem nula
+		ADJACENCIA *ad = gr->adj[i].cab; //chamo a cabeÃ§a da lista de adjacencia desta aresta
+			while(ad){ //enquanto as adjacencias nÃ£o forem nula
 				printf("v%d(%d) ",ad->vertice+1,ad->peso); //imprimo a adjacencia e seu peso
 				ad=ad->prox; //passo para proxima adjacencia
 			}
@@ -84,7 +87,6 @@ void imprime(GRAFO *gr){
 void main()
 {
     FILE *arq;
-    char Linha[100];
     char *result;
     int i;
     arq = fopen("Exemplo.txt", "rt");
@@ -99,13 +101,11 @@ void main()
     int orig, dest, peso;
     int qtdvert, qtdaresta;
     while (!feof(arq)){
-        // Lê uma linha (inclusive com o '\n')
-        // Se foi possível ler
+        // LÃª uma linha (inclusive com o '\n')
+        // Se foi possÃ­vel ler
         if(i == 1){
-            result = fscanf(arq, "%d%", &qtdvert);
+            result = fscanf(arq, "%d%d", &qtdvert, &qtdaresta);
             graph = criaGrafo(qtdvert);
-        }else if(i == 2){
-            result = fscanf(arq, "%d%", &qtdaresta);
         }else{
             result = fscanf(arq, "%d%d%d", &orig, &dest, &peso);
             criaAresta(graph,orig,dest,peso);
