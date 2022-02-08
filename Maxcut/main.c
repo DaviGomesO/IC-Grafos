@@ -70,9 +70,11 @@ bool criaAresta(GRAFO *graf, int vi, int vf, PESO p)
 
   ADJACENCIA *novo = criaAdj(vf, p); // crio adjacencia com o vértice final e o peso
   // retirei a volta pois iria contar dobrado
-  // ADJACENCIA *volta = criaAdj(vi,p); // criei a volta pois trata-se de uma grafo não direcionado
+  ADJACENCIA *volta = criaAdj(vi, p); // criei a volta pois trata-se de uma grafo não direcionado
   // coloco a adjacencia na lista do vértice inicial
   // ajustei para ordenar em crescente
+  // o grafo ta sendo criado como se fosse direcionado, por questões de leitura mais a frente.
+  // pois iremos ler os primeiros vértices e suas adjacencias
   if (graf->adj[vi].cab == NULL)
   {
     graf->adj[vi].cab = novo;
@@ -87,6 +89,19 @@ bool criaAresta(GRAFO *graf, int vi, int vf, PESO p)
     aux->prox = novo;
   }
   // novo->prox = graf->adj[vi].cab;
+  if (graf->adj[vf].cab == NULL)
+  {
+    graf->adj[vf].cab = volta;
+  }
+  else
+  {
+    ADJACENCIA *aux = graf->adj[vf].cab;
+    while (aux->prox != NULL)
+    {
+      aux = aux->prox;
+    }
+    aux->prox = volta;
+  }
   // volta->prox = graf->adj[vf].cab;
   // o campo prox da adjacencia vai receber a cabeça da lista
   // graf->adj[vi].cab=novo;
@@ -95,27 +110,26 @@ bool criaAresta(GRAFO *graf, int vi, int vf, PESO p)
   return (true);
 }
 
-void imprime(GRAFO *gr, int *estrutura)
+void imprime(GRAFO *gr, int *estruturaSubC)
 {
-  // validações se o grafo existe
-
   printf("Vertices: %d.\nArestas: %d. \nLista de adjacencia\n", gr->vertices, gr->arestas); // imprime numero de vértice e arestas
 
   for (int i = 0; i < gr->vertices; i++)
   {
-    if (estrutura[i] == vermelho)
+    printf("vertice %d ", i + 1); // Imprimo em qual aresta estou
+    // e verifico em qual subconjunto ela está, através do vetor de identificação
+    if (estruturaSubC[i] == vermelho)
     {
-      printf("(Vermelho) - ");
+      printf("- (Vermelho): ");
     }
-    else if (estrutura[i] == azul)
+    else if (estruturaSubC[i] == azul)
     {
-      printf("(Azul) - ");
+      printf("- (Azul): ");
     }
     else
     {
-      printf("Não está em nenhum subconjunto - ");
+      printf("- (Não está em nenhum subconjunto): ");
     }
-    printf("vertice %d: ", i + 1);   // Imprimo em qual aresta estou
     ADJACENCIA *ad = gr->adj[i].cab; // chamo a cabeça da lista de adjacencia desta aresta
     while (ad)
     {                                                // enquanto as adjacencias não forem nula
@@ -126,36 +140,38 @@ void imprime(GRAFO *gr, int *estrutura)
   }
 }
 
-void confereestrutura(int *estrutura, int i, ADJACENCIA *aux, GRAFO *gr, int *PesoMaxIntAzul, int *PesoMaxIntVer, int *pesoMaxExt)
+void confereestrutura(int *estruturaSubConj, int i, ADJACENCIA *aux, GRAFO *gr, int *PesoMaxIntAzul, int *PesoMaxIntVer, int *pesoMaxExt)
 {
-  if (estrutura[i] == azul)
+  if (estruturaSubConj[i] == azul)
   {
-    if (estrutura[aux->vertice] == azul)
+    if (estruturaSubConj[aux->vertice] == azul)
     {
       (*PesoMaxIntAzul) += aux->peso;
     }
-    else if (estrutura[aux->vertice] == vermelho)
+    else if (estruturaSubConj[aux->vertice] == vermelho)
     {
       (*pesoMaxExt) += aux->peso;
     }
   }
-  else if (estrutura[i] == vermelho)
+  else if (estruturaSubConj[i] == vermelho)
   {
-    if (estrutura[aux->vertice] == vermelho)
+    if (estruturaSubConj[aux->vertice] == vermelho)
     {
       (*PesoMaxIntVer) += aux->peso;
     }
-    else if (estrutura[aux->vertice] == azul)
+    else if (estruturaSubConj[aux->vertice] == azul)
     {
       (*pesoMaxExt) += aux->peso;
     }
   }
+  // aqui estou tratando a duplicidade da aresta que está sendo representada uma única vez, e fazendo com que seja lido apenas uma vez, no caso na ordem crescente.
+  gr->adj[aux->vertice].cab = gr->adj[aux->vertice].cab->prox;
 }
 
-void CorteMaximo(GRAFO *gr, int *estrutura)
+void CorteMaximo(GRAFO *gr, int *estruturaSubConj)
 {
   int pesoMaxExt = 0, PesoMaxIntVer = 0, PesoMaxIntAzul = 0;
-  if (!estrutura)
+  if (!estruturaSubConj)
   {
     printf("Sem memoria!\n");
     exit(1);
@@ -169,15 +185,16 @@ void CorteMaximo(GRAFO *gr, int *estrutura)
         ADJACENCIA *aux = gr->adj[i].cab;
         while (aux->prox != NULL)
         {
-          confereestrutura(estrutura, i, aux, gr, &PesoMaxIntAzul, &PesoMaxIntVer, &pesoMaxExt);
+          confereestrutura(estruturaSubConj, i, aux, gr, &PesoMaxIntAzul, &PesoMaxIntVer, &pesoMaxExt);
+          // gr->adj[aux->vertice].cab = gr->adj[aux->vertice].cab->prox;
           aux = aux->prox;
         }
-        confereestrutura(estrutura, i, aux, gr, &PesoMaxIntAzul, &PesoMaxIntVer, &pesoMaxExt);
+        confereestrutura(estruturaSubConj, i, aux, gr, &PesoMaxIntAzul, &PesoMaxIntVer, &pesoMaxExt);
+        // gr->adj[aux->vertice].cab = gr->adj[aux->vertice].cab->prox;
       }
     }
   }
   printf("\nCorte Maximo: %d.\nCorte Interno entre as arestas no subconjunto vermelho: %d\nCorte interno entre as arestas do subconjunto azul: %d\n", pesoMaxExt, PesoMaxIntVer, PesoMaxIntAzul);
-  // return pesoMax;
 }
 
 void main()
@@ -213,13 +230,13 @@ void main()
     }
     i++;
   }
-  int *estrutura = (int *)malloc(graf->vertices * sizeof(int));
+  int *subconjuntos = (int *)malloc(graf->vertices * sizeof(int));
   // aqui ainda tenho que tratar para fazer as alternancias
-  estrutura[0] = azul;
-  estrutura[1] = vermelho;
-  estrutura[2] = vermelho;
-  estrutura[3] = azul;
-  imprime(graf, estrutura);
-  CorteMaximo(graf, estrutura);
+  subconjuntos[0] = azul;
+  subconjuntos[1] = vermelho;
+  subconjuntos[2] = vermelho;
+  subconjuntos[3] = azul;
+  imprime(graf, subconjuntos);
+  CorteMaximo(graf, subconjuntos);
   fclose(arq);
 }
