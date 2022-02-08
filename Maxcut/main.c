@@ -60,7 +60,7 @@ ADJACENCIA *criaAdj(int v, int peso)
   return (temp); // retorno endereço da adjacencia
 }
 
-bool criaAresta(GRAFO *graf, int vi, int vf, PESO p)
+bool criaAresta(GRAFO *graf, int vi, int vf, PESO p, int criaVolta)
 { // vai de vi a vf
   if (!graf)
     return (false); // validações se o grafo existe
@@ -71,7 +71,6 @@ bool criaAresta(GRAFO *graf, int vi, int vf, PESO p)
 
   ADJACENCIA *novo = criaAdj(vf, p); // crio adjacencia com o vértice final e o peso
   // retirei a volta pois iria contar dobrado
-  //ADJACENCIA *volta = criaAdj(vi, p); // criei a volta pois trata-se de uma grafo não direcionado
   // coloco a adjacencia na lista do vértice inicial
   // ajustei para ordenar em crescente
   // o grafo ta sendo criado como se fosse direcionado, por questões de leitura mais a frente.
@@ -90,19 +89,22 @@ bool criaAresta(GRAFO *graf, int vi, int vf, PESO p)
     aux->prox = novo;
   }
   // novo->prox = graf->adj[vi].cab;
-  /*if (graf->adj[vf].cab == NULL)
-  {
-    graf->adj[vf].cab = volta;
+  if(criaVolta == 1){
+      ADJACENCIA *volta = criaAdj(vi, p); // criei a volta pois trata-se de uma grafo não direcionado
+      if (graf->adj[vf].cab == NULL)
+      {
+        graf->adj[vf].cab = volta;
+      }
+      else
+      {
+        ADJACENCIA *aux = graf->adj[vf].cab;
+        while (aux->prox != NULL)
+        {
+          aux = aux->prox;
+        }
+        aux->prox = volta;
+      }
   }
-  else
-  {
-    ADJACENCIA *aux = graf->adj[vf].cab;
-    while (aux->prox != NULL)
-    {
-      aux = aux->prox;
-    }
-    aux->prox = volta;
-  }*/
   // volta->prox = graf->adj[vf].cab;
   // o campo prox da adjacencia vai receber a cabeça da lista
   // graf->adj[vi].cab=novo;
@@ -349,7 +351,9 @@ void main()
     return;
   }
   linha = 1;
-  GRAFO *graf;
+  GRAFO *graf, *grafreserva;
+  //utilizei o graf reserva para construir as arestas de ida e volta, como se não fosse direcionado
+  // o graf será para apresentar apenas as arestas uma única vez, e em ordem crescente
   int orig, dest, peso;
   int qtdvert, qtdaresta;
   int cortemax = 0, subconjuntoCorteMax = -1;
@@ -361,11 +365,13 @@ void main()
     {
       result = fscanf(arq, "%d%d", &qtdvert, &qtdaresta);
       graf = criaGrafo(qtdvert);
+      grafreserva = criaGrafo(qtdvert);
     }
     else
     {
       result = fscanf(arq, "%d%d%d", &orig, &dest, &peso);
-      criaAresta(graf, orig, dest, peso);
+      criaAresta(graf, orig, dest, peso,0);
+      criaAresta(grafreserva, orig, dest, peso,1);
     }
     linha++;
   }
@@ -389,13 +395,13 @@ void main()
     {
       subconjuntos[c] = combinacoes[w][c];
     }
-    imprime(graf, subconjuntos,w);
+    imprime(grafreserva, subconjuntos,w);
     CorteMaximo(graf, subconjuntos, &cortemax, &subconjuntoCorteMax, w);
   }
 
   printf("~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=\n");
   printf("\nO Corte-Maximo foi obtido no subconjunto de combinacao %d, e com valor de: %d\n", subconjuntoCorteMax+1, cortemax);
-  imprime(graf,combinacoes[subconjuntoCorteMax],subconjuntoCorteMax);
+  imprime(grafreserva,combinacoes[subconjuntoCorteMax],subconjuntoCorteMax);
   /*subconjuntos[0] = vermelho;
   subconjuntos[1] = azul;
   subconjuntos[2] = azul;
