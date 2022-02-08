@@ -87,15 +87,6 @@ bool criaAresta(GRAFO *graf, int vi, int vf, PESO p)
     aux->prox = novo;
   }
   // novo->prox = graf->adj[vi].cab;
-  /*if(graf->adj[vf].cab == NULL){
-        graf->adj[vf].cab = volta;
-  }else{
-        ADJACENCIA *aux = graf->adj[vf].cab;
-        while(aux->prox != NULL){
-            aux = aux->prox;
-        }
-        aux->prox = volta;
-  }*/
   // volta->prox = graf->adj[vf].cab;
   // o campo prox da adjacencia vai receber a cabeça da lista
   // graf->adj[vi].cab=novo;
