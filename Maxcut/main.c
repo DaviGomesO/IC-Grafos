@@ -232,7 +232,6 @@ void CorteMaximo(GRAFO *gr){
         }
     }
     printf("\nCorte Maximo: %d.\nCorte Interno entre as arestas no subconjunto vermelho: %d\nCorte interno entre as arestas do subconjunto azul: %d\n",pesoMaxExt, PesoMaxIntVer, PesoMaxIntAzul);
-    //return pesoMax;
 }
 
 void main()
