@@ -145,109 +145,24 @@ void imprime(GRAFO *gr, int *estruturaSubC, int w)
 
 void preencheMatriz(GRAFO *gr, int **matCombinacoes, int elev)
 {
-  /*for (int i = 0; i < elev; i++)
+  for(int i = 0;i<elev; i++){
+    int aux_num = i;
+    for(int aux = gr->vertices-1; aux >= 0; aux--){
+        matCombinacoes[i][aux] = aux_num%2;
+        aux_num = aux_num/2;
+    }
+  }
+  for (int i = 0; i < elev; i++)
   {
     for (int j = 0; j < gr->vertices; j++)
     {
-      matCombinacoes[i][j] = 0;
+      if(matCombinacoes[i][j] == 0){
+        matCombinacoes[i][j] = azul;
+      }else if(matCombinacoes[i][j] == 1){
+        matCombinacoes[i][j] = vermelho;
+      }
     }
-  }*/
-
-  // combinação 1
-  matCombinacoes[0][0] = vermelho;
-  matCombinacoes[0][1] = vermelho;
-  matCombinacoes[0][2] = vermelho;
-  matCombinacoes[0][3] = vermelho;
-
-  // combinação 2
-  matCombinacoes[1][0] = vermelho;
-  matCombinacoes[1][1] = vermelho;
-  matCombinacoes[1][2] = vermelho;
-  matCombinacoes[1][3] = azul;
-
-  // combinação 3
-  matCombinacoes[2][0] = vermelho;
-  matCombinacoes[2][1] = vermelho;
-  matCombinacoes[2][2] = azul;
-  matCombinacoes[2][3] = vermelho;
-
-  // combinação 4
-  matCombinacoes[3][0] = vermelho;
-  matCombinacoes[3][1] = vermelho;
-  matCombinacoes[3][2] = azul;
-  matCombinacoes[3][3] = azul;
-
-  // combinação 5
-  matCombinacoes[4][0] = vermelho;
-  matCombinacoes[4][1] = azul;
-  matCombinacoes[4][2] = vermelho;
-  matCombinacoes[4][3] = vermelho;
-
-  // combinação 6
-  matCombinacoes[5][0] = vermelho;
-  matCombinacoes[5][1] = azul;
-  matCombinacoes[5][2] = vermelho;
-  matCombinacoes[5][3] = azul;
-
-  // combinação 7
-  matCombinacoes[6][0] = vermelho;
-  matCombinacoes[6][1] = azul;
-  matCombinacoes[6][2] = azul;
-  matCombinacoes[6][3] = vermelho;
-
-  // combinação 8
-  matCombinacoes[7][0] = vermelho;
-  matCombinacoes[7][1] = azul;
-  matCombinacoes[7][2] = azul;
-  matCombinacoes[7][3] = azul;
-
-  // combinação 9
-  matCombinacoes[8][0] = azul;
-  matCombinacoes[8][1] = vermelho;
-  matCombinacoes[8][2] = vermelho;
-  matCombinacoes[8][3] = vermelho;
-
-  // combinação 10
-  matCombinacoes[9][0] = azul;
-  matCombinacoes[9][1] = vermelho;
-  matCombinacoes[9][2] = vermelho;
-  matCombinacoes[9][3] = azul;
-
-  // combinação 11
-  matCombinacoes[10][0] = azul;
-  matCombinacoes[10][1] = vermelho;
-  matCombinacoes[10][2] = azul;
-  matCombinacoes[10][3] = vermelho;
-
-  // combinação 12
-  matCombinacoes[11][0] = azul;
-  matCombinacoes[11][1] = vermelho;
-  matCombinacoes[11][2] = azul;
-  matCombinacoes[11][3] = azul;
-
-  // combinação 13
-  matCombinacoes[12][0] = azul;
-  matCombinacoes[12][1] = azul;
-  matCombinacoes[12][2] = vermelho;
-  matCombinacoes[12][3] = vermelho;
-
-  // combinação 14
-  matCombinacoes[13][0] = azul;
-  matCombinacoes[13][1] = azul;
-  matCombinacoes[13][2] = vermelho;
-  matCombinacoes[13][3] = azul;
-
-  // combinação 15
-  matCombinacoes[14][0] = azul;
-  matCombinacoes[14][1] = azul;
-  matCombinacoes[14][2] = azul;
-  matCombinacoes[14][3] = vermelho;
-
-  // combinação 16
-  matCombinacoes[15][0] = azul;
-  matCombinacoes[15][1] = azul;
-  matCombinacoes[15][2] = azul;
-  matCombinacoes[15][3] = azul;
+  }
 }
 
 void imprimirMatriz(GRAFO *gr, int **matCombinacoes, int elev)
