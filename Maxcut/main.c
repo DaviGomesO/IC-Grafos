@@ -60,7 +60,7 @@ ADJACENCIA *criaAdj(int v, int peso)
   return (temp); // retorno endereço da adjacencia
 }
 
-bool criaAresta(GRAFO *graf, int vi, int vf, PESO p)
+bool criaAresta(GRAFO *graf, int vi, int vf, PESO p, int criaVolta)
 { // vai de vi a vf
   if (!graf)
     return (false); // validações se o grafo existe
@@ -71,7 +71,6 @@ bool criaAresta(GRAFO *graf, int vi, int vf, PESO p)
 
   ADJACENCIA *novo = criaAdj(vf, p); // crio adjacencia com o vértice final e o peso
   // retirei a volta pois iria contar dobrado
-  //ADJACENCIA *volta = criaAdj(vi, p); // criei a volta pois trata-se de uma grafo não direcionado
   // coloco a adjacencia na lista do vértice inicial
   // ajustei para ordenar em crescente
   // o grafo ta sendo criado como se fosse direcionado, por questões de leitura mais a frente.
@@ -90,19 +89,22 @@ bool criaAresta(GRAFO *graf, int vi, int vf, PESO p)
     aux->prox = novo;
   }
   // novo->prox = graf->adj[vi].cab;
-  /*if (graf->adj[vf].cab == NULL)
-  {
-    graf->adj[vf].cab = volta;
+  if(criaVolta == 1){
+      ADJACENCIA *volta = criaAdj(vi, p); // criei a volta pois trata-se de uma grafo não direcionado
+      if (graf->adj[vf].cab == NULL)
+      {
+        graf->adj[vf].cab = volta;
+      }
+      else
+      {
+        ADJACENCIA *aux = graf->adj[vf].cab;
+        while (aux->prox != NULL)
+        {
+          aux = aux->prox;
+        }
+        aux->prox = volta;
+      }
   }
-  else
-  {
-    ADJACENCIA *aux = graf->adj[vf].cab;
-    while (aux->prox != NULL)
-    {
-      aux = aux->prox;
-    }
-    aux->prox = volta;
-  }*/
   // volta->prox = graf->adj[vf].cab;
   // o campo prox da adjacencia vai receber a cabeça da lista
   // graf->adj[vi].cab=novo;
@@ -143,109 +145,24 @@ void imprime(GRAFO *gr, int *estruturaSubC, int w)
 
 void preencheMatriz(GRAFO *gr, int **matCombinacoes, int elev)
 {
-  /*for (int i = 0; i < elev; i++)
+  for(int i = 0;i<elev; i++){
+    int aux_num = i;
+    for(int aux = gr->vertices-1; aux >= 0; aux--){
+        matCombinacoes[i][aux] = aux_num%2;
+        aux_num = aux_num/2;
+    }
+  }
+  for (int i = 0; i < elev; i++)
   {
     for (int j = 0; j < gr->vertices; j++)
     {
-      matCombinacoes[i][j] = 0;
+      if(matCombinacoes[i][j] == 0){
+        matCombinacoes[i][j] = azul;
+      }else if(matCombinacoes[i][j] == 1){
+        matCombinacoes[i][j] = vermelho;
+      }
     }
-  }*/
-
-  // combinação 1
-  matCombinacoes[0][0] = vermelho;
-  matCombinacoes[0][1] = vermelho;
-  matCombinacoes[0][2] = vermelho;
-  matCombinacoes[0][3] = vermelho;
-
-  // combinação 2
-  matCombinacoes[1][0] = vermelho;
-  matCombinacoes[1][1] = vermelho;
-  matCombinacoes[1][2] = vermelho;
-  matCombinacoes[1][3] = azul;
-
-  // combinação 3
-  matCombinacoes[2][0] = vermelho;
-  matCombinacoes[2][1] = vermelho;
-  matCombinacoes[2][2] = azul;
-  matCombinacoes[2][3] = vermelho;
-
-  // combinação 4
-  matCombinacoes[3][0] = vermelho;
-  matCombinacoes[3][1] = vermelho;
-  matCombinacoes[3][2] = azul;
-  matCombinacoes[3][3] = azul;
-
-  // combinação 5
-  matCombinacoes[4][0] = vermelho;
-  matCombinacoes[4][1] = azul;
-  matCombinacoes[4][2] = vermelho;
-  matCombinacoes[4][3] = vermelho;
-
-  // combinação 6
-  matCombinacoes[5][0] = vermelho;
-  matCombinacoes[5][1] = azul;
-  matCombinacoes[5][2] = vermelho;
-  matCombinacoes[5][3] = azul;
-
-  // combinação 7
-  matCombinacoes[6][0] = vermelho;
-  matCombinacoes[6][1] = azul;
-  matCombinacoes[6][2] = azul;
-  matCombinacoes[6][3] = vermelho;
-
-  // combinação 8
-  matCombinacoes[7][0] = vermelho;
-  matCombinacoes[7][1] = azul;
-  matCombinacoes[7][2] = azul;
-  matCombinacoes[7][3] = azul;
-
-  // combinação 9
-  matCombinacoes[8][0] = azul;
-  matCombinacoes[8][1] = vermelho;
-  matCombinacoes[8][2] = vermelho;
-  matCombinacoes[8][3] = vermelho;
-
-  // combinação 10
-  matCombinacoes[9][0] = azul;
-  matCombinacoes[9][1] = vermelho;
-  matCombinacoes[9][2] = vermelho;
-  matCombinacoes[9][3] = azul;
-
-  // combinação 11
-  matCombinacoes[10][0] = azul;
-  matCombinacoes[10][1] = vermelho;
-  matCombinacoes[10][2] = azul;
-  matCombinacoes[10][3] = vermelho;
-
-  // combinação 12
-  matCombinacoes[11][0] = azul;
-  matCombinacoes[11][1] = vermelho;
-  matCombinacoes[11][2] = azul;
-  matCombinacoes[11][3] = azul;
-
-  // combinação 13
-  matCombinacoes[12][0] = azul;
-  matCombinacoes[12][1] = azul;
-  matCombinacoes[12][2] = vermelho;
-  matCombinacoes[12][3] = vermelho;
-
-  // combinação 14
-  matCombinacoes[13][0] = azul;
-  matCombinacoes[13][1] = azul;
-  matCombinacoes[13][2] = vermelho;
-  matCombinacoes[13][3] = azul;
-
-  // combinação 15
-  matCombinacoes[14][0] = azul;
-  matCombinacoes[14][1] = azul;
-  matCombinacoes[14][2] = azul;
-  matCombinacoes[14][3] = vermelho;
-
-  // combinação 16
-  matCombinacoes[15][0] = azul;
-  matCombinacoes[15][1] = azul;
-  matCombinacoes[15][2] = azul;
-  matCombinacoes[15][3] = azul;
+  }
 }
 
 void imprimirMatriz(GRAFO *gr, int **matCombinacoes, int elev)
@@ -349,7 +266,9 @@ void main()
     return;
   }
   linha = 1;
-  GRAFO *graf;
+  GRAFO *graf, *grafreserva;
+  //utilizei o graf reserva para construir as arestas de ida e volta, como se não fosse direcionado
+  // o graf será para apresentar apenas as arestas uma única vez, e em ordem crescente
   int orig, dest, peso;
   int qtdvert, qtdaresta;
   int cortemax = 0, subconjuntoCorteMax = -1;
@@ -361,11 +280,13 @@ void main()
     {
       result = fscanf(arq, "%d%d", &qtdvert, &qtdaresta);
       graf = criaGrafo(qtdvert);
+      grafreserva = criaGrafo(qtdvert);
     }
     else
     {
       result = fscanf(arq, "%d%d%d", &orig, &dest, &peso);
-      criaAresta(graf, orig, dest, peso);
+      criaAresta(graf, orig, dest, peso,0);
+      criaAresta(grafreserva, orig, dest, peso,1);
     }
     linha++;
   }
@@ -389,13 +310,13 @@ void main()
     {
       subconjuntos[c] = combinacoes[w][c];
     }
-    imprime(graf, subconjuntos,w);
+    imprime(grafreserva, subconjuntos,w);
     CorteMaximo(graf, subconjuntos, &cortemax, &subconjuntoCorteMax, w);
   }
 
   printf("~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=\n");
   printf("\nO Corte-Maximo foi obtido no subconjunto de combinacao %d, e com valor de: %d\n", subconjuntoCorteMax+1, cortemax);
-  imprime(graf,combinacoes[subconjuntoCorteMax],subconjuntoCorteMax);
+  imprime(grafreserva,combinacoes[subconjuntoCorteMax],subconjuntoCorteMax);
   /*subconjuntos[0] = vermelho;
   subconjuntos[1] = azul;
   subconjuntos[2] = azul;
