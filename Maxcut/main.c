@@ -2,125 +2,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-
-#define false 0
-#define true 1
-#define azul 2
-#define vermelho 3
-
-typedef int bool;
-typedef int PESO;
-
-typedef struct adjacencia
-{
-  int vertice;             // vertice de destino
-  PESO peso;               // peso associado a aresta que leva ao vertice de destino
-  struct adjacencia *prox; // O prÃ³ximo elemento da lista de adjacencias
-} ADJACENCIA;
-
-typedef struct vertice
-{
-  /* Dados armazenados vÃ£o aqui */
-  ADJACENCIA *cab; // possui apenas a cabeÃ§a da lista de adjacencia
-} VERTICE;
-
-typedef struct grafo
-{
-  int vertices; // numero de vertice total do grafo
-  int arestas;  // numero de arestas totais do grafo
-  VERTICE *adj; // Arranjo de vertices da estrutura
-} GRAFO;
-
-/**funÃ§Ã£o para criar um GRAFO**/
-GRAFO *criaGrafo(int qtdvert)
-{
-  int i;
-
-  GRAFO *graf = (GRAFO *)malloc(sizeof(GRAFO)); // aloca espaÃ§o para estrtura grafo
-  graf->vertices = qtdvert;                     // atualizo o numero de vertice
-  graf->arestas = 0;                            // atualizo o numero de vertice
-  graf->adj = (VERTICE *)malloc(qtdvert * sizeof(VERTICE));
-  // Dentro da estrturua tem sÃ³ o arranjo para o ponteiro de vertice, nÃ£o o arranjo em si
-  //  entÃ£o aloco o arranjo com (v) o numero de vertice desejado
-  for (i = 0; i < qtdvert; i++)
-  {
-    graf->adj[i].cab = NULL; // coloco NULL em todas arestas
-  }
-  return (graf);
-}
-
-/**funÃ§Ã£o para adicionar arestas no GRAFO**/
-
-ADJACENCIA *criaAdj(int v, int peso)
-{
-  ADJACENCIA *temp = (ADJACENCIA *)malloc(sizeof(ADJACENCIA)); // aloca espaÃ§o para um nÃ³
-  temp->vertice = v;                                           // vertice alvo da adjacencia
-  temp->peso = peso;                                           // peso da aresta
-  temp->prox = NULL;
-  return (temp); // retorno endereÃ§o da adjacencia
-}
-
-bool criaAresta(GRAFO *graf, int vi, int vf, PESO p, int criaVolta)
-{ // vai de vi a vf
-  if (!graf)
-    return (false); // validaÃ§Ãµes se o grafo existe
-  if ((vf < 0) || (vf >= graf->vertices))
-    return (false); // validaÃ§Ãµes se os valores nÃ£o sÃ£o neg
-  if ((vi < 0) || (vf >= graf->vertices))
-    return (false); // ou maiores que o numero de vÃ©rtice do grafo
-
-  ADJACENCIA *novo = criaAdj(vf, p); // crio adjacencia com o vÃ©rtice final e o peso
-  // retirei a volta pois iria contar dobrado
-  // coloco a adjacencia na lista do vÃ©rtice inicial
-  // ajustei para ordenar em crescente
-  // o grafo ta sendo criado como se fosse direcionado, por questÃµes de leitura mais a frente.
-  // pois iremos ler os primeiros vÃ©rtices e suas adjacencias
-  if (graf->adj[vi].cab == NULL)
-  {
-    graf->adj[vi].cab = novo;
-  }
-  else
-  {
-    ADJACENCIA *aux = graf->adj[vi].cab;
-    while (aux->prox != NULL)
-    {
-      aux = aux->prox;
-    }
-    aux->prox = novo;
-  }
-  // novo->prox = graf->adj[vi].cab;
-  if(criaVolta == 1){
-      ADJACENCIA *volta = criaAdj(vi, p); // criei a volta pois trata-se de uma grafo nÃ£o direcionado
-      if (graf->adj[vf].cab == NULL)
-      {
-        graf->adj[vf].cab = volta;
-      }
-      else
-      {
-        ADJACENCIA *aux = graf->adj[vf].cab;
-        while (aux->prox != NULL)
-        {
-          aux = aux->prox;
-        }
-        aux->prox = volta;
-      }
-  }
-  // volta->prox = graf->adj[vf].cab;
-  // o campo prox da adjacencia vai receber a cabeÃ§a da lista
-  // graf->adj[vi].cab=novo;
-  // graf->adj[vf].cab=volta; // e a cabeÃ§a da lista passa a ser o novo elemento
-  graf->arestas++; // atualizo o numero de aresta no grafo
-  return (true);
-}
+#include <time.h>
+#include "operacoesGrafos.h"
+#include "CorteMaximo.h"
 
 void imprime(GRAFO *gr, int *estruturaSubC, int w)
 {
-  printf("Vertices: %d.\nArestas: %d. \nLista de adjacencia da combinacao %d\n", gr->vertices, gr->arestas,w+1); // imprime numero de vÃ©rtice e arestas
+  printf("Vertices: %d.\nArestas: %d. \nLista de adjacencia da combinacao %d\n", gr->vertices, gr->arestas,w+1); // imprime numero de vértice e arestas
 
   for (int i = 0; i < gr->vertices; i++)
   {
     printf("vertice %d ", i + 1); // Imprimo em qual aresta estou
-    // e verifico em qual subconjunto ela estÃ¡, atravÃ©s do vetor de identificaÃ§Ã£o
+    // e verifico em qual subconjunto ela está, através do vetor de identificação
     if (estruturaSubC[i] == vermelho)
     {
       printf("- (Vermelho): ");
@@ -131,11 +24,11 @@ void imprime(GRAFO *gr, int *estruturaSubC, int w)
     }
     else
     {
-      printf("- (NÃ£o estÃ¡ em nenhum subconjunto): ");
+      printf("- (Não está em nenhum subconjunto): ");
     }
-    ADJACENCIA *ad = gr->adj[i].cab; // chamo a cabeÃ§a da lista de adjacencia desta aresta
+    ADJACENCIA *ad = gr->adj[i].cab; // chamo a cabeça da lista de adjacencia desta aresta
     while (ad)
-    {                                                // enquanto as adjacencias nÃ£o forem nula
+    {                                                // enquanto as adjacencias não forem nula
       printf("v%d(%d) ", ad->vertice + 1, ad->peso); // imprimo a adjacencia e seu peso
       ad = ad->prox;                                 // passo para proxima adjacencia
     }
@@ -143,185 +36,266 @@ void imprime(GRAFO *gr, int *estruturaSubC, int w)
   }
 }
 
-void preencheMatriz(GRAFO *gr, int **matCombinacoes, int elev)
-{
-  for(int i = 0;i<elev; i++){
-    int aux_num = i;
-    for(int aux = gr->vertices-1; aux >= 0; aux--){
-        matCombinacoes[i][aux] = aux_num%2;
-        aux_num = aux_num/2;
+int ** criaPopulacao(GRAFO *gr, int elev, int *tamPopul, int tamCromossomo){
+    int aleat;
+    if(gr->vertices < 3){
+        (*tamPopul) = elev;
+    }else if(gr->vertices >= 3 && gr->vertices < 10){
+        (*tamPopul) = (elev/4);
+    }else if(gr->vertices >= 10 && gr->vertices < 20){
+        (*tamPopul) = (elev/8);
+    }else{
+        (*tamPopul) = 100000;
     }
-  }
-  for (int i = 0; i < elev; i++)
-  {
-    for (int j = 0; j < gr->vertices; j++)
-    {
-      if(matCombinacoes[i][j] == 0){
-        matCombinacoes[i][j] = azul;
-      }else if(matCombinacoes[i][j] == 1){
-        matCombinacoes[i][j] = vermelho;
-      }
+    int **populacao = (int**)malloc((*tamPopul) * sizeof(int *));
+    for(int i = 0; i < (*tamPopul); i++){
+        populacao[i] = (int*)malloc(tamCromossomo * sizeof(int));
     }
-  }
-}
 
-void imprimirMatriz(GRAFO *gr, int **matCombinacoes, int elev)
-{
-  for (int i = 0; i < elev; i++)
-  {
-    printf("Combinacao %d - ", i+1);
-    for (int j = 0; j < gr->vertices; j++)
-    {
-      printf("[");
-      if (matCombinacoes[i][j] == vermelho)
-      {
-        printf("vermelho");
-      }
-      else if (matCombinacoes[i][j] == azul)
-      {
-        printf("azul");
-      }
-      else
-      {
-        printf("NÃ£o esta definido.");
-      }
-      printf("] ");
-    }
-    printf("\n");
-  }
-}
-
-void confereestrutura(int *estruturaSubConj, int i, ADJACENCIA *aux, GRAFO *gr, int *PesoMaxIntAzul, int *PesoMaxIntVer, int *pesoMaxExt)
-{
-  if (estruturaSubConj[i] == azul)
-  {
-    if (estruturaSubConj[aux->vertice] == azul)
-    {
-      (*PesoMaxIntAzul) += aux->peso;
-    }
-    else if (estruturaSubConj[aux->vertice] == vermelho)
-    {
-      (*pesoMaxExt) += aux->peso;
-    }
-  }
-  else if (estruturaSubConj[i] == vermelho)
-  {
-    if (estruturaSubConj[aux->vertice] == vermelho)
-    {
-      (*PesoMaxIntVer) += aux->peso;
-    }
-    else if (estruturaSubConj[aux->vertice] == azul)
-    {
-      (*pesoMaxExt) += aux->peso;
-    }
-  }
-  // aqui estou tratando a duplicidade da aresta que estÃ¡ sendo representada uma Ãºnica vez, e fazendo com que seja lido apenas uma vez, no caso na ordem crescente.
-  //gr->adj[aux->vertice].cab = gr->adj[aux->vertice].cab->prox;
-}
-
-void CorteMaximo(GRAFO *gr, int *estruturaSubConj, int *cortemax, int *subconjCorteMax, int subconjuntodavez)
-{
-  int pesoMaxExt = 0, PesoMaxIntVer = 0, PesoMaxIntAzul = 0;
-  if (!estruturaSubConj)
-  {
-    printf("Sem memoria!\n");
-    exit(1);
-  }
-  else
-  {
-    for (int i = 0; i < gr->vertices; i++)
-    {
-      if (gr->adj[i].cab != NULL)
-      {
-        ADJACENCIA *aux = gr->adj[i].cab;
-        while (aux->prox != NULL)
-        {
-          confereestrutura(estruturaSubConj, i, aux, gr, &PesoMaxIntAzul, &PesoMaxIntVer, &pesoMaxExt);
-          // gr->adj[aux->vertice].cab = gr->adj[aux->vertice].cab->prox;
-          aux = aux->prox;
+    //geração da população aleatoria
+    srand(time(NULL));
+    int cont = 1;
+    for(int i = 0; i < (*tamPopul); i++){
+        for(int j = tamCromossomo-1; j >= 0; j--){
+            aleat = (rand() % 10)%2;
+            //printf("aleat %d = %d\n",cont,aleat);
+            if(aleat == 0){
+                populacao[i][j] = azul;
+            }else if(aleat == 1){
+                populacao[i][j] = vermelho;
+            }
+            cont++;
         }
-        confereestrutura(estruturaSubConj, i, aux, gr, &PesoMaxIntAzul, &PesoMaxIntVer, &pesoMaxExt);
-        // gr->adj[aux->vertice].cab = gr->adj[aux->vertice].cab->prox;
-      }
     }
-  }
-  printf("\nCorte Maximo: %d.\nCorte Interno entre as arestas no subconjunto vermelho: %d\nCorte interno entre as arestas do subconjunto azul: %d\n\n", pesoMaxExt, PesoMaxIntVer, PesoMaxIntAzul);
-  if(pesoMaxExt >= (*cortemax)){
-    (*cortemax) = pesoMaxExt;
-    (*subconjCorteMax) = subconjuntodavez;
-  }
+    return populacao;
+}
+
+void inserirNaGeral(int **populacaogeral, int tamPop, int **populacao, int tamCromossomo){
+    int *indiv = (int*)malloc(tamCromossomo * sizeof(int));
+    for(int i = 0; i < tamPop; i++){
+        int indicapos = 0;
+        int cont = 0;
+        for(int j = tamCromossomo-1; j >= 0; j--){
+            ;
+            indiv[j] = populacao[i][j];
+            if(populacao[i][j] == azul){
+                indicapos += (pow(2,cont)*0);
+            }else if(populacao[i][j] == vermelho){
+                indicapos += (pow(2,cont)*1);
+            }
+            cont++;
+        }
+
+        //printf("posicao adicionada %d da populacao geral\n",indicapos);
+        for(int j = tamCromossomo-1; j >= 0; j--){
+            populacaogeral[indicapos][j] = indiv[j];
+        }
+    }
 }
 
 void main()
 {
-  FILE *arq;
-  char *result;
-  int linha;
-  arq = fopen("Exemplo.txt", "rt");
+    FILE *arq;
+    arq = fopen("Exemplo.txt", "rt");
+    GRAFO *graf, *grafreserva;
+    char *result;
+    int linha;
 
-  // Se houver erro na abertura
-  if (arq == NULL)
-  {
-    printf("Problemas na abertura do arquivo\n");
-    return;
-  }
-  linha = 1;
-  GRAFO *graf, *grafreserva;
-  //utilizei o graf reserva para construir as arestas de ida e volta, como se nÃ£o fosse direcionado
-  // o graf serÃ¡ para apresentar apenas as arestas uma Ãºnica vez, e em ordem crescente
-  int orig, dest, peso;
-  int qtdvert, qtdaresta;
-  int cortemax = 0, subconjuntoCorteMax = -1;
-  while (!feof(arq))
-  {
-    // LÃª uma linha (inclusive com o '\n')
-    // Se foi possÃ­vel ler
-    if (linha == 1)
+    // Se houver erro na abertura
+    if (arq == NULL)
     {
-      result = fscanf(arq, "%d%d", &qtdvert, &qtdaresta);
-      graf = criaGrafo(qtdvert);
-      grafreserva = criaGrafo(qtdvert);
+        printf("Problemas na abertura do arquivo\n");
+        return;
     }
-    else
+    linha = 1;
+
+    //utilizei o graf reserva para construir as arestas de ida e volta, como se não fosse direcionado
+    // o graf será para apresentar apenas as arestas uma única vez, e em ordem crescente
+    int orig, dest, peso;
+    int qtdvert, qtdaresta;
+
+    while (!feof(arq))
     {
-      result = fscanf(arq, "%d%d%d", &orig, &dest, &peso);
-      criaAresta(graf, orig, dest, peso,0);
-      criaAresta(grafreserva, orig, dest, peso,1);
+    // Lê uma linha (inclusive com o '\n')
+    // Se foi possível ler
+        if (linha == 1)
+        {
+          result = fscanf(arq, "%d%d", &qtdvert, &qtdaresta);
+          graf = criaGrafo(qtdvert);
+          grafreserva = criaGrafo(qtdvert);
+        }
+        else
+        {
+          result = fscanf(arq, "%d%d%d", &orig, &dest, &peso);
+          criaAresta(graf, orig, dest, peso,0);
+          criaAresta(grafreserva, orig, dest, peso,1);
+        }
+        linha++;
+      }
+
+    int cortemax = 0, subconjuntoCorteMax = -1, MenorCorteMax = -1, subconjuntoMenorCorteMax = -1;
+
+    int *subconjuntos = (int *)malloc(graf->vertices * sizeof(int));
+    // aqui ainda tenho que tratar para fazer as alternancias
+    int elev = pow(2, graf->vertices);
+    /*
+    int **combinacoes = (int **)malloc(elev * sizeof(int *));
+    for (int i = 0; i < elev; i++)
+    {
+        combinacoes[i] = (int *)malloc(graf->vertices * sizeof(int));
     }
-    linha++;
-  }
-  int *subconjuntos = (int *)malloc(graf->vertices * sizeof(int));
-  // aqui ainda tenho que tratar para fazer as alternancias
-  int elev = pow(2, graf->vertices);
-  int **combinacoes = (int **)malloc(elev * sizeof(int *));
-  for (int i = 0; i < elev; i++)
-  {
-    combinacoes[i] = (int *)malloc(graf->vertices * sizeof(int));
-  }
+    */
+    int tamPop = 0;
+    int tamCromossomo = graf->vertices;
+    int numgeracoes = 10;
+    float probCruzamento = 0.95, probMutacao = 0.1;
+    int **populacao = criaPopulacao(graf,elev,&tamPop, tamCromossomo);
+    imprimirMatriz(graf,populacao,tamPop);
 
-  preencheMatriz(graf, combinacoes, elev);
-  imprimirMatriz(graf, combinacoes, elev);
-  printf("\n");
 
-  for (int w = 0; w < elev; w++)
-  {
+    //int *individuo = (int*)malloc(tamPop * sizeof(int));
+    //int *aptidao = (int*)malloc(tamPop * sizeof(int));
+    int **novageracao = (int**)malloc(tamPop * sizeof(int*));
+    int **melhoresSolucoes = (int**)malloc(tamPop * sizeof(int*));
+    for(int i = 0; i<tamPop; i++){
+        novageracao[i] = (int*)malloc(tamCromossomo*sizeof(int));
+        melhoresSolucoes[i] = (int*)malloc(tamCromossomo*sizeof(int));
+    }
+
+    int **populacaogeral = (int**)malloc(elev * sizeof(int*));
+    for(int i = 0; i < elev; i++){
+        populacaogeral[i] = (int*)malloc(graf->vertices * sizeof(int));
+    }
+
+    //inserir a populacao inicial na lista de combinações/população geral
+    //por meio de inserir em cada posição ou com o auxilio de um contador para controlar quantas posições ja foram inseridas
+    inserirNaGeral(populacaogeral,tamPop,populacao,tamCromossomo);
+
+    printf("\nSegue a lista da populacao geral, ao adicionar a populacao inicial:\nobs: a populacao geral esta iniciando sem nenhuma alocacao.\n");
+    imprimirMatriz(graf,populacaogeral,elev);
+
+    for(int geracao = 0; geracao < numgeracoes; geracao++){
+        printf("=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\n");
+        if(geracao == 0){
+            for(int i = 0; i < tamPop; i++){
+                for(int j = tamCromossomo-1; j >= 0; j--){
+                    novageracao[i][j] = populacao[i][j];
+                }
+            }
+            //mutação
+            int posaleat = tamPop+1, cromossomoaleat=tamCromossomo+1;
+            srand(time(NULL));
+            while(posaleat > tamPop){
+                posaleat = rand()%tamPop;
+            }
+            while(cromossomoaleat > tamCromossomo){
+                cromossomoaleat = rand()%tamCromossomo;
+            }
+            printf("\nAlterando na posicao %d e no cromossomo %d da populacao inicial.\n",posaleat,cromossomoaleat+1);
+            if(novageracao[posaleat][cromossomoaleat] == azul){
+                novageracao[posaleat][cromossomoaleat] = vermelho;
+            }else if(populacao[posaleat][cromossomoaleat] == vermelho){
+                novageracao[posaleat][cromossomoaleat] = azul;
+            }
+            imprimirMatriz(graf,novageracao,tamPop);
+            inserirNaGeral(populacaogeral,tamPop,novageracao,tamCromossomo);
+
+            printf("\nPopulacao geral apos a adicao da nova geracao:\n");
+            imprimirMatriz(graf,populacaogeral,elev);
+        }else{
+            //mutação
+            int posaleat = tamPop+1, cromossomoaleat=tamCromossomo+1;
+            srand(geracao);
+            while(posaleat > tamPop){
+                posaleat = rand()%tamPop;
+            }
+            while(cromossomoaleat > tamCromossomo){
+                cromossomoaleat = rand()%tamCromossomo;
+            }
+            printf("\nAlterando na posicao %d e no cromossomo %d da geracao anterior.\n",posaleat,cromossomoaleat+1);
+            if(novageracao[posaleat][cromossomoaleat] == azul){
+                novageracao[posaleat][cromossomoaleat] = vermelho;
+            }else if(populacao[posaleat][cromossomoaleat] == vermelho){
+                novageracao[posaleat][cromossomoaleat] = azul;
+            }
+            imprimirMatriz(graf,novageracao,tamPop);
+            inserirNaGeral(populacaogeral,tamPop,novageracao,tamCromossomo);
+
+            printf("\nPopulacao geral apos a adicao da nova geracao:\n");
+            imprimirMatriz(graf,populacaogeral,elev);
+        }
+    }
+
+    for(int i = 0; i < elev; i++){
+        printf("=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\n");
+        printf("\nCalculo do corte maximo na posicao %d da populacao geral.",i);
+        CorteMaximo(graf,populacaogeral[i],&cortemax,&subconjuntoCorteMax,i);
+    }
+
+    /*
+    int geracoes = 0;
+
+    while(geracoes < numgeracoes){
+        if(geracoes == 0){
+            novaGeracao = populacao;
+        }else{
+            int posaleat = tamPop+1, cromossomoaleat=tamCromossomo+1;
+            srand(geracoes);
+            while(posaleat > tamPop){
+                posaleat = rand()%tamPop;
+            }
+            while(cromossomoaleat > tamCromossomo){
+                cromossomoaleat = rand()%tamCromossomo;
+            }
+            if(populacao[posaleat][cromossomoaleat] == azul){
+                populacao[posaleat][cromossomoaleat] = vermelho;
+            }else if(populacao[posaleat][cromossomoaleat] == vermelho){
+                populacao[posaleat][cromossomoaleat] = azul;
+            }
+            novaGeracao = populacao;
+        }
+        imprimirMatriz(graf,novaGeracao,tamPop);
+        for(int linhapop = 0; linhapop < tamPop; linhapop++){
+            for(int col = 0; col < tamCromossomo; col++){
+                indiv[col] = populacao[linhapop][col];
+            }
+            //imprime(grafreserva,indiv,linhapop);
+            CorteMaximo(graf,indiv,&cortemax,&subconjuntoCorteMax,linhapop);
+            if(linhapop == 0){
+                MenorCorteMax = cortemax;
+                subconjuntoMenorCorteMax = subconjuntoCorteMax;
+            }else{
+                if(MenorCorteMax > cortemax){
+                    MenorCorteMax = cortemax;
+                    subconjuntoMenorCorteMax = subconjuntoCorteMax;
+                }
+            }
+        }
+        printf("Ate a geracao %d,o menor corte maximo eh : %d, e esta no subconjunto %d.\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=\n",geracoes+1,MenorCorteMax,subconjuntoMenorCorteMax+1);
+        geracoes++;
+    }
+    */
+
+    /*preencheMatriz(graf, combinacoes, elev);
+    imprimirMatriz(graf, combinacoes, elev);
+    printf("\n");
+
+    for (int w = 0; w < elev; w++)
+    {
+        printf("~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=\n");
+        for (int c = 0; c < graf->vertices; c++)
+        {
+        //subconjuntos[c] = combinacoes[w][c];
+        subconjuntos[c] = populacao[w][c];
+        }
+        imprime(grafreserva, subconjuntos,w);
+        CorteMaximo(graf, subconjuntos, &cortemax, &subconjuntoCorteMax, w);
+    }
+
     printf("~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=\n");
-    for (int c = 0; c < graf->vertices; c++)
-    {
-      subconjuntos[c] = combinacoes[w][c];
-    }
-    imprime(grafreserva, subconjuntos,w);
-    CorteMaximo(graf, subconjuntos, &cortemax, &subconjuntoCorteMax, w);
-  }
-
-  printf("~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=\n");
-  printf("\nO Corte-Maximo foi obtido no subconjunto de combinacao %d, e com valor de: %d\n", subconjuntoCorteMax+1, cortemax);
-  imprime(grafreserva,combinacoes[subconjuntoCorteMax],subconjuntoCorteMax);
-  /*subconjuntos[0] = vermelho;
-  subconjuntos[1] = azul;
-  subconjuntos[2] = azul;
-  subconjuntos[3] = vermelho;
-  imprime(graf, subconjuntos);
-  CorteMaximo(graf, subconjuntos);*/
-  fclose(arq);
+    printf("\nO Corte-Maximo foi obtido no subconjunto de combinacao %d, e com valor de: %d\n", subconjuntoCorteMax+1, cortemax);
+    //imprime(grafreserva,combinacoes[subconjuntoCorteMax],subconjuntoCorteMax);
+    imprime(grafreserva,populacao[subconjuntoCorteMax],subconjuntoCorteMax);
+    */
+    fclose(arq);
 }
