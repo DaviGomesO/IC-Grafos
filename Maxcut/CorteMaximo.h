@@ -4,9 +4,9 @@
 #define azul 2
 #define vermelho 3
 
-void preencheMatriz(GRAFO *gr, int **matCombinacoes, int elev)
+void preencheMatriz(GRAFO *gr, int **matCombinacoes, int totalPop)
 {
-  for(int i = 0;i<elev; i++){
+  for(int i = 0; i < totalPop; i++){
     int aux_num = i;
     for(int aux = gr->vertices-1; aux >= 0; aux--){
         if(aux_num%2 == 0){
@@ -19,9 +19,9 @@ void preencheMatriz(GRAFO *gr, int **matCombinacoes, int elev)
   }
 }
 
-void imprimirMatriz(GRAFO *gr, int **matCombinacoes, int elev)
+void imprimirMatriz(GRAFO *gr, int **matCombinacoes, int totalPop)
 {
-  for (int i = 0; i < elev; i++)
+  for (int i = 0; i < totalPop; i++)
   {
     printf("Posicao %d - ", i);
     for (int j = 0; j < gr->vertices; j++)
