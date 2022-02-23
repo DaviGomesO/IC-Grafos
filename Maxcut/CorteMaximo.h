@@ -106,4 +106,32 @@ void CorteMaximo(GRAFO *gr, int *estruturaSubConj, int *cortemax, int *subconjCo
   }
 }
 
+int corteDoCromossomo(GRAFO *gr, int *estruturaSubConj){
+    int pesoMaxExt = 0, PesoMaxIntVer = 0, PesoMaxIntAzul = 0;
+  if (!estruturaSubConj)
+  {
+    printf("Sem memoria!\n");
+    exit(1);
+  }
+  else
+  {
+    for (int i = 0; i < gr->vertices; i++)
+    {
+      if (gr->adj[i].cab != NULL)
+      {
+        ADJACENCIA *aux = gr->adj[i].cab;
+        while (aux->prox != NULL)
+        {
+          confereestrutura(estruturaSubConj, i, aux, gr, &PesoMaxIntAzul, &PesoMaxIntVer, &pesoMaxExt);
+          // gr->adj[aux->vertice].cab = gr->adj[aux->vertice].cab->prox;
+          aux = aux->prox;
+        }
+        confereestrutura(estruturaSubConj, i, aux, gr, &PesoMaxIntAzul, &PesoMaxIntVer, &pesoMaxExt);
+        // gr->adj[aux->vertice].cab = gr->adj[aux->vertice].cab->prox;
+      }
+    }
+  }
+  return pesoMaxExt;
+}
+
 #endif // CORTEMAXIMO_H_INCLUDED
