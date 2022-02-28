@@ -40,7 +40,7 @@ void imprime(GRAFO *gr, int *estruturaSubC, int w)
 void main()
 {
     FILE *arq;
-    arq = fopen("Exemplo.txt", "rt");
+    arq = fopen("Exemplo2.txt", "rt");
     GRAFO *graf, *grafreserva;
     char *result;
     int linha;
@@ -84,8 +84,8 @@ void main()
 
     int tamPop = 0;
     int tamCromossomo = graf->vertices;
-    int numgeracoes = 10;
-    float probCruzamento = 0.95, probMutacao = 0.1;
+    int numgeracoes = 20;
+    float probCruzamento = 0.1, probMutacao = 0.95;
 
     //iniciando a população
     int **populacao = criaPopulacao(graf,&totalPop,&tamPop, tamCromossomo);
@@ -147,26 +147,22 @@ void main()
             for(int i = 0; i<tamPop; i++){
                 conferirInserirPopulacao(populacaogeral,novapopulacao[i],&contaPos,tamCromossomo);
             }
-            /*printf("\nPopulacao geral:\n");
-            //imprimirMatriz(graf,populacaogeral,totalPop);
-            imprimirMatriz(graf,populacaogeral,contaPos);*/
         }else{
             int **populacaoaux = novapopulacao;
             printf("\nPopulacao que esta sendo trabalhada:\n");
             imprimirMatriz(graf,novapopulacao,tamPop);
-            if(contaPos < totalPop/2)
+            //aqui ainda irei ajustar de acordo com as probabilidades
+            if(contaPos <= totalPop/2){
                 mutacao(novapopulacao,populacaoaux,geracao,tamPop,tamCromossomo);
-            else
+            }else{
                 crossover(novapopulacao,populacaoaux,geracao,tamPop,tamCromossomo);
+            }
             printf("\nNova populacao que sera trabalhada\n");
             imprimirMatriz(graf,novapopulacao,tamPop);
             printf("\n");
             for(int i = 0; i<tamPop; i++){
                 conferirInserirPopulacao(populacaogeral,novapopulacao[i],&contaPos,tamCromossomo);
             }
-            /*printf("\nPopulacao geral:\n");
-            //imprimirMatriz(graf,populacaogeral,totalPop);
-            imprimirMatriz(graf,populacaogeral,contaPos);*/
         }
         printf("\nPopulacao geral:\n");
         //imprimirMatriz(graf,populacaogeral,totalPop);
