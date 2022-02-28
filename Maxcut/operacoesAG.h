@@ -1,16 +1,19 @@
 #ifndef OPERACOESAG_H_INCLUDED
 #define OPERACOESAG_H_INCLUDED
 
-int ** criaPopulacao(GRAFO *gr, int totalPop, int *tamPopul, int tamCromossomo){
+int ** criaPopulacao(GRAFO *gr, int *totalPop, int *tamPopul, int tamCromossomo){
     int aleat;
     if(gr->vertices < 3){
-        (*tamPopul) = totalPop;
+        (*tamPopul) = (*totalPop)/2;
     }else if(gr->vertices >= 3 && gr->vertices < 10){
-        (*tamPopul) = (totalPop/4);
-    }else if(gr->vertices >= 10 && gr->vertices < 20){
-        (*tamPopul) = (totalPop/8);
+        (*tamPopul) = ((*totalPop)/4);
+    }else if(gr->vertices >= 10 && gr->vertices < 17){
+        (*tamPopul) = ((*totalPop)/8);
     }else{
-        (*tamPopul) = 100000;
+        //limitar no máximo com 10000
+        (*tamPopul) = 10000;
+        (*totalPop) = (*totalPop)/8;
+
     }
     int **populacao = (int**)malloc((*tamPopul) * sizeof(int *));
     for(int i = 0; i < (*tamPopul); i++){
@@ -33,6 +36,42 @@ int ** criaPopulacao(GRAFO *gr, int totalPop, int *tamPopul, int tamCromossomo){
         }
     }
     return populacao;
+}
+
+
+int conferirCromossomo(int *populacaogeral, int *populacao, int tamCromossomo){
+    int aux = 0;
+    for(int gene = tamCromossomo-1; gene >= 0; gene--){
+        if(populacaogeral[gene] == populacao[gene]){
+            aux++;
+        }else{
+            aux--;
+        }
+    }
+    //printf("tam cromossomo: %d x genes iguais: %d\n", tamCromossomo, aux);
+    return aux;
+    //se aux for igual ao tamanho do cromossomo, quer dizer que os dois são iguais em todas os genes
+}
+
+void conferirInserirPopulacao(int **populacaogeral, int *populacao, int *contaPos, int tamCromossomo){
+    //essa função vai ser usada para quando estivermos adicionando o elemento da população em qualquer posição da população da tabela, de acordo com sua ordem de aparição
+    //consistindo em adicionar o cromossomo apenas quando a mesma não exista na geral
+    int podeinserir = -1;
+    for(int auxcromossomo = 0; auxcromossomo <= (*contaPos); auxcromossomo++){
+        //vai conferir se os cromossomos estão iguais ou não
+        if(conferirCromossomo(populacaogeral[auxcromossomo], populacao, tamCromossomo) == tamCromossomo){
+            podeinserir = 0;
+            break;
+        }else{
+            podeinserir = 1;
+        }
+    }
+    if(podeinserir == 1){
+        for(int j = tamCromossomo-1; j >= 0; j--){
+            populacaogeral[(*contaPos)][j] = populacao[j];
+        }
+        (*contaPos)++;
+    }
 }
 
 void inserirNaGeral(int **populacaogeral, int tamPop, int **populacao, int tamCromossomo){
@@ -83,27 +122,103 @@ void mutacao(int **novapopulacao, int **populacao, int geracao, int tamPop, int 
     }
 }
 
-int conferirCromossomo(int *populacaogeral, int *populacao, int tamCromossomo){
-    int aux = 0;
-    for(int gene = tamCromossomo-1; gene >= 0; gene--){
-        if(populacaogeral[gene] == populacao[gene]){
-            aux++;
-        }else{
-            aux--;
-        }
+void crossover(int **novapopulacao, int **populacao, int geracao, int tamPop, int tamCromossomo){
+    int cromossomoaleat1 = tamPop+1, cromossomoaleat2 = tamPop+1;
+    int genealeat1 = tamCromossomo+1, genealeat2 = tamCromossomo+1;
+    //esse formato consegui deixar mais aleatorio sem apresentar sorteios viciados
+    srand(rand());
+    while(cromossomoaleat1 > tamPop && cromossomoaleat2 > tamPop){
+        cromossomoaleat1 = rand()%tamPop;
+        cromossomoaleat2 = rand()%tamPop;
+        //garantindo que os dois cromossomos sorteados não seja o mesmo
+        //o ou é para garantir que os dois cromossomos não sejam a mesma estrutura, ou seja, os mesmos genes
+        if((cromossomoaleat1 == cromossomoaleat2) || conferirCromossomo(populacao[cromossomoaleat1],populacao[cromossomoaleat2],tamCromossomo) == tamCromossomo)
+            cromossomoaleat1 = cromossomoaleat2 = tamPop+1;
     }
-    //printf("tam cromossomo: %d x genes iguais: %d\n", tamCromossomo, aux);
-    return aux;
-    //se aux for igual ao tamanho do cromossomo, quer dizer que os dois são iguais em todas os genes
-}
+    if(cromossomoaleat1 > cromossomoaleat2){
+        int aux = cromossomoaleat1;
+        cromossomoaleat1 = cromossomoaleat2;
+        cromossomoaleat2 = aux;
+    }
+    while(genealeat1> tamCromossomo && genealeat2 > tamCromossomo){
+        genealeat1 = rand()%tamCromossomo;
+        genealeat2 = rand()%tamCromossomo;
+        if(genealeat1 == genealeat2)
+            genealeat1 = genealeat2 = tamCromossomo+1;
+    }
+    if(genealeat1 > genealeat2){
+        int aux = genealeat1;
+        genealeat1 = genealeat2;
+        genealeat2 = aux;
+    }
+    if(geracao == 0){
+        printf("\nCombinando os genes %d e %d dos cromossomos %d e %d, da populacao inicial.\n",genealeat1+1,genealeat2+1,cromossomoaleat1,cromossomoaleat2);
+    }else{
+        printf("\nCombinando os genes %d e %d dos cromossomos %d e %d, da geracao anterior.\n",genealeat1+1,genealeat2+1,cromossomoaleat1,cromossomoaleat2);
+    }
 
-void conferirInserirPopulacao(int **populacaogeral, int *populacao, int *contaPos, int tamCromossomo){
-    //essa função vai ser usada para quando estivermos adicionando o elemento da população em qualquer posição da população da tabela, de acordo com sua ordem de aparição
-    //consistindo em adicionar o cromossomo apenas quando a mesma não exista na geral
+    int *novoCromossomo1, *novoCromossomo2;
+    novoCromossomo1 = (int*)malloc(tamCromossomo*sizeof(int));
+    novoCromossomo2 = (int*)malloc(tamCromossomo*sizeof(int));
+
+    for(int i = 0; i < tamCromossomo; i++){
+        novoCromossomo1[i] = novapopulacao[cromossomoaleat1][i];
+        novoCromossomo2[i] = novapopulacao[cromossomoaleat2][i];
+    }
+
+    printf("\nCromossomo %d - ",cromossomoaleat1);
+    for(int j = 0; j<tamCromossomo; j++){
+        printf("[");
+        if(novoCromossomo1[j] == azul)
+            printf("azul");
+        else if(novoCromossomo1[j] == vermelho)
+            printf("vermelho");
+        printf("]");
+    }
+
+    printf("\nCromossomo %d - ",cromossomoaleat2);
+    for(int j = 0; j<tamCromossomo; j++){
+        printf("[");
+        if(novoCromossomo2[j] == azul)
+            printf("azul");
+        else if(novoCromossomo2[j] == vermelho)
+            printf("vermelho");
+        printf("]");
+    }
+
+    //depois ajustar para esses filhos gerados não tirem os pais da população, tentar adicionar a uma nova população
+    // ou comparar para ficar com os melhores
+
+    novoCromossomo2[genealeat1] = populacao[cromossomoaleat1][genealeat1];
+    novoCromossomo2[genealeat2] = populacao[cromossomoaleat1][genealeat2];
+    novoCromossomo1[genealeat1] = populacao[cromossomoaleat2][genealeat1];
+    novoCromossomo1[genealeat2] = populacao[cromossomoaleat2][genealeat2];
+
+    printf("\nNovo cromossomo gerado - ");
+    for(int j = 0; j<tamCromossomo; j++){
+        printf("[");
+        if(novoCromossomo1[j] == azul)
+            printf("azul");
+        else if(novoCromossomo1[j] == vermelho)
+            printf("vermelho");
+        printf("]");
+    }
+
+    printf("\nNovo cromossomo gerado - ");
+    for(int j = 0; j<tamCromossomo; j++){
+        printf("[");
+        if(novoCromossomo2[j] == azul)
+            printf("azul");
+        else if(novoCromossomo2[j] == vermelho)
+            printf("vermelho");
+        printf("]");
+    }
+    printf("\n\n");
+
+    //verifica se gerou cromossomos que ja estão na população
     int podeinserir = -1;
-    for(int auxcromossomo = 0; auxcromossomo <= (*contaPos); auxcromossomo++){
-        //vai conferir se os cromossomos estão iguais ou não
-        if(conferirCromossomo(populacaogeral[auxcromossomo], populacao, tamCromossomo) == tamCromossomo){
+    for(int i = 0; i<tamPop;i++){
+        if(conferirCromossomo(novapopulacao[i],novoCromossomo1,tamCromossomo)==tamCromossomo){
             podeinserir = 0;
             break;
         }else{
@@ -111,10 +226,24 @@ void conferirInserirPopulacao(int **populacaogeral, int *populacao, int *contaPo
         }
     }
     if(podeinserir == 1){
-        for(int j = tamCromossomo-1; j >= 0; j--){
-            populacaogeral[(*contaPos)][j] = populacao[j];
+        for(int i = 0; i<tamCromossomo; i++){
+            novapopulacao[cromossomoaleat1][i] = novoCromossomo1[i];
         }
-        (*contaPos)++;
+    }
+
+    podeinserir = -1;
+    for(int i = 0; i<tamPop;i++){
+        if(conferirCromossomo(novapopulacao[i],novoCromossomo2,tamCromossomo)==tamCromossomo){
+            podeinserir = 0;
+            break;
+        }else{
+            podeinserir = 1;
+        }
+    }
+    if(podeinserir == 1){
+        for(int i = 0; i<tamCromossomo; i++){
+            novapopulacao[cromossomoaleat2][i] = novoCromossomo2[i];
+        }
     }
 }
 
@@ -173,6 +302,8 @@ void apresentarMelhoresCromossomos(GRAFO *graf, int *melhoresValoresCorte, int *
     alocarMelhoresSolucoes(graf,melhoresValoresCorte,melhoresSolucoes, tamPop, populacaogeral, contaPos, tamCromossomo);
     printf("\n");
     imprimirMatriz(graf,melhoresSolucoes,tamPop);
+    for(int i = 0; i < tamPop; i++)
+        printf("\nvalor de corte do cromossomo %d entre os melhores: %d",i,melhoresValoresCorte[i]);
 }
 
 #endif // OPERACOESAG_H_INCLUDED

@@ -23,7 +23,7 @@ void imprimirMatriz(GRAFO *gr, int **matCombinacoes, int totalPop)
 {
   for (int i = 0; i < totalPop; i++)
   {
-    printf("Posicao %d - ", i);
+    printf("Cromossomo %d - ", i);
     for (int j = 0; j < gr->vertices; j++)
     {
       printf("[");
