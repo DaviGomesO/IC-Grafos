@@ -84,8 +84,8 @@ void main()
 
     int tamPop = 0;
     int tamCromossomo = graf->vertices;
-    int numgeracoes = 20;
-    float probCruzamento = 0.1, probMutacao = 0.95;
+    int numgeracoes = 100;
+    float probCruzamento = 0.6, probMutacao = 1-probCruzamento;
 
     //iniciando a população
     int **populacao = criaPopulacao(graf,&totalPop,&tamPop, tamCromossomo);
@@ -128,8 +128,9 @@ void main()
     apresentarMelhoresCromossomos(graf,melhoresValoresCorte,melhoresSolucoes, tamPop, populacaogeral, contaPos, tamCromossomo);
 
     //agora vou fazer as mutações/crossover's e inserir na população
-    for(int geracao = 0; geracao < numgeracoes; geracao++){
-        printf("\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\n");
+    //adicionei essa outra condicional para evitar de iterar quando atingir o número máximo de possibilidades que certa quantidade de vértices possam gerar de soluções
+    for(int geracao = 0; geracao < numgeracoes && contaPos < totalPop; geracao++){
+        printf("\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\nGeracao %d:",geracao);
         if(geracao == 0){
             for(int i = 0; i < tamPop; i++){
                 for(int j = tamCromossomo-1; j >= 0; j--){
@@ -139,8 +140,10 @@ void main()
             }
             printf("\nPopulacao que esta sendo trabalhada:\n");
             imprimirMatriz(graf,novapopulacao,tamPop);
-            mutacao(novapopulacao,populacao,geracao,contaPos,tamCromossomo);
-            //crossover(novapopulacao,populacao,geracao,contaPos,tamCromossomo);
+            if(probCruzamento <= probMutacao)
+                mutacao(novapopulacao,populacao,geracao,contaPos,tamCromossomo,&probCruzamento,&probMutacao);
+            else
+                crossover(novapopulacao,populacao,geracao,contaPos,tamCromossomo,&probCruzamento,&probMutacao);
             printf("\nNova populacao que sera trabalhada\n");
             imprimirMatriz(graf,novapopulacao,tamPop);
             printf("\n");
@@ -152,10 +155,10 @@ void main()
             printf("\nPopulacao que esta sendo trabalhada:\n");
             imprimirMatriz(graf,novapopulacao,tamPop);
             //aqui ainda irei ajustar de acordo com as probabilidades
-            if(contaPos <= totalPop/2){
-                mutacao(novapopulacao,populacaoaux,geracao,tamPop,tamCromossomo);
+            if(probMutacao >= probCruzamento){
+                mutacao(novapopulacao,populacaoaux,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao);
             }else{
-                crossover(novapopulacao,populacaoaux,geracao,tamPop,tamCromossomo);
+                crossover(novapopulacao,populacaoaux,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao);
             }
             printf("\nNova populacao que sera trabalhada\n");
             imprimirMatriz(graf,novapopulacao,tamPop);

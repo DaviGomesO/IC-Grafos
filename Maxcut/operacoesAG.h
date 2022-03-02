@@ -97,7 +97,7 @@ void inserirNaGeral(int **populacaogeral, int tamPop, int **populacao, int tamCr
     }
 }
 
-void mutacao(int **novapopulacao, int **populacao, int geracao, int tamPop, int tamCromossomo){
+void mutacao(int **novapopulacao, int **populacao, int geracao, int tamPop, int tamCromossomo, float *probCruzamento, float *probMutacao){
     int cromossomoaleat = tamPop+1, genealeat = tamCromossomo+1;
     //esse formato consegui deixar mais aleatorio sem apresentar sorteios viciados
     srand(rand());
@@ -120,9 +120,13 @@ void mutacao(int **novapopulacao, int **populacao, int geracao, int tamPop, int 
         printf("(vermelho -> azul)\n");
         novapopulacao[cromossomoaleat][genealeat] = azul;
     }
+
+    (*probCruzamento) = (*probCruzamento)+((*probCruzamento)*0.02);
+    (*probMutacao) = (*probMutacao)-((*probMutacao)*0.05);
+    //printf("\n%0.2f x %0.2f\n",(*probCruzamento),(*probMutacao));
 }
 
-void crossover(int **novapopulacao, int **populacao, int geracao, int tamPop, int tamCromossomo){
+void crossover(int **novapopulacao, int **populacao, int geracao, int tamPop, int tamCromossomo, float *probCruzamento, float *probMutacao){
     int cromossomoaleat1 = tamPop+1, cromossomoaleat2 = tamPop+1;
     int genealeat1 = tamCromossomo+1, genealeat2 = tamCromossomo+1;
     //esse formato consegui deixar mais aleatorio sem apresentar sorteios viciados
@@ -259,6 +263,9 @@ void crossover(int **novapopulacao, int **populacao, int geracao, int tamPop, in
             novapopulacao[cromossomoaleat2][i] = novoCromossomo2[i];
         }
     }
+    (*probCruzamento) = (*probCruzamento)-((*probCruzamento)*0.05);
+    (*probMutacao) = (*probMutacao)+((*probMutacao)*0.02);
+    //printf("\n%0.2f x %0.2f\n",(*probCruzamento),(*probMutacao));
     //mais na frente levará esse vetor novapopulação para conferir se esses cromossomos gerados estão ou não na população geral
 }
 
