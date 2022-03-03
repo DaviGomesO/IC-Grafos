@@ -84,7 +84,7 @@ void main()
 
     int tamPop = 0;
     int tamCromossomo = graf->vertices;
-    int numgeracoes = 100;
+    int numgeracoes = 1000;
     float probCruzamento = 0.6, probMutacao = 1-probCruzamento;
 
     //iniciando a população
@@ -124,13 +124,38 @@ void main()
     imprimirMatriz(graf,populacaogeral,contaPos);
 
     int *melhoresValoresCorte = (int*)malloc(tamPop * sizeof(int));
+    for(int i = 0; i < tamPop; i++)
+        melhoresValoresCorte[i] = -1;
 
     apresentarMelhoresCromossomos(graf,melhoresValoresCorte,melhoresSolucoes, tamPop, populacaogeral, contaPos, tamCromossomo);
 
+    int semconvergencias = 0;
     //agora vou fazer as mutações/crossover's e inserir na população
     //adicionei essa outra condicional para evitar de iterar quando atingir o número máximo de possibilidades que certa quantidade de vértices possam gerar de soluções
     for(int geracao = 0; geracao < numgeracoes && contaPos < totalPop; geracao++){
         printf("\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\nGeracao %d:",geracao);
+        //quando estiver a um certo periodo de gerações sem convergências na população, irá recriar e se nessa nova população conter algum cromossomo diferente da população geral, será utilizada esta.
+        if(semconvergencias >= 10){
+            printf("\nEsta sendo analisado uma nova populacao, pois a um certo periodo sem convergencia na populacao.\n");
+            int **popAux = criaPopulacao(graf,&totalPop,&tamPop,tamCromossomo);
+            int auxContaPos = contaPos;
+            for(int i = 0; i<tamPop; i++){
+                conferirInserirPopulacao(populacaogeral,popAux[i],&contaPos,tamCromossomo);
+            }
+            //caso nessa nova população não apareça nenhum cromossomo diferente, permanecerá a atual e será feito ou a mutação ou o crossover ainda na atual.
+            if(auxContaPos == contaPos){
+                printf("\nNao surgiu nenhum novo cromossomo, portanto, segue-se com a mesma populacao que esta sendo utilizada atualmente.\n");
+                semconvergencias++;
+            }else{
+                semconvergencias = 0;
+                printf("\nNova populacao que foi criada apos periodo sem convergencia onde a mesma sera utilizada para as proximas geracoes:\n");
+                imprimirMatriz(graf,popAux,tamPop);
+                for(int i = 0; i<tamPop; i++){
+                    novapopulacao[i] = popAux[i];
+                }
+            }
+            system("pause");
+        }
         if(geracao == 0){
             for(int i = 0; i < tamPop; i++){
                 for(int j = tamCromossomo-1; j >= 0; j--){
@@ -147,14 +172,21 @@ void main()
             printf("\nNova populacao que sera trabalhada\n");
             imprimirMatriz(graf,novapopulacao,tamPop);
             printf("\n");
+            int auxContaPos = contaPos;
             for(int i = 0; i<tamPop; i++){
                 conferirInserirPopulacao(populacaogeral,novapopulacao[i],&contaPos,tamCromossomo);
+            }
+            //aqui estou utilizando para quando houver um certo numero de gerações e a cada 10 gerações, se não tiver entrado nenhum cromossomo diferente nas soluções, mais na frente ele irá recriar a população para trabalhar;
+            if(auxContaPos == contaPos){
+                semconvergencias++;
+            }else{
+                semconvergencias = 0;
             }
         }else{
             int **populacaoaux = novapopulacao;
             printf("\nPopulacao que esta sendo trabalhada:\n");
             imprimirMatriz(graf,novapopulacao,tamPop);
-            //aqui ainda irei ajustar de acordo com as probabilidades
+
             if(probMutacao >= probCruzamento){
                 mutacao(novapopulacao,populacaoaux,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao);
             }else{
@@ -163,8 +195,14 @@ void main()
             printf("\nNova populacao que sera trabalhada\n");
             imprimirMatriz(graf,novapopulacao,tamPop);
             printf("\n");
+            int auxContaPos = contaPos;
             for(int i = 0; i<tamPop; i++){
                 conferirInserirPopulacao(populacaogeral,novapopulacao[i],&contaPos,tamCromossomo);
+            }
+            if(auxContaPos == contaPos){
+                semconvergencias++;
+            }else{
+                semconvergencias = 0;
             }
         }
         printf("\nPopulacao geral:\n");

@@ -121,8 +121,8 @@ void mutacao(int **novapopulacao, int **populacao, int geracao, int tamPop, int 
         novapopulacao[cromossomoaleat][genealeat] = azul;
     }
 
-    (*probCruzamento) = (*probCruzamento)+((*probCruzamento)*0.02);
-    (*probMutacao) = (*probMutacao)-((*probMutacao)*0.05);
+    (*probCruzamento) = (*probCruzamento)+((*probCruzamento)*0.05);
+    (*probMutacao) = (*probMutacao)-((*probMutacao)*0.03);
     //printf("\n%0.2f x %0.2f\n",(*probCruzamento),(*probMutacao));
 }
 
@@ -263,8 +263,8 @@ void crossover(int **novapopulacao, int **populacao, int geracao, int tamPop, in
             novapopulacao[cromossomoaleat2][i] = novoCromossomo2[i];
         }
     }
-    (*probCruzamento) = (*probCruzamento)-((*probCruzamento)*0.05);
-    (*probMutacao) = (*probMutacao)+((*probMutacao)*0.02);
+    (*probCruzamento) = (*probCruzamento)-((*probCruzamento)*0.03);
+    (*probMutacao) = (*probMutacao)+((*probMutacao)*0.05);
     //printf("\n%0.2f x %0.2f\n",(*probCruzamento),(*probMutacao));
     //mais na frente levará esse vetor novapopulação para conferir se esses cromossomos gerados estão ou não na população geral
 }
