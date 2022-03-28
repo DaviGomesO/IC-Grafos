@@ -40,7 +40,9 @@ void imprime(GRAFO *gr, int *estruturaSubC, int w)
 void main()
 {
     FILE *arq;
-    arq = fopen("Exemplo2.txt", "rt");
+    FILE *info;
+    arq = fopen("Exemplo.txt", "rt");
+    info = fopen("informações.txt", "wt");
     GRAFO *graf, *grafreserva;
     char *result;
     int linha;
@@ -51,6 +53,13 @@ void main()
         printf("Problemas na abertura do arquivo\n");
         return;
     }
+    if(info != NULL)
+        printf("Arquivo informacoes criado com sucesso!!\n");
+    else{
+        printf("Problemas na criação do arquivo\n");
+        return 1;
+    }
+
     linha = 1;
 
     //utilizei o graf reserva para construir as arestas de ida e volta, como se não fosse direcionado
@@ -84,7 +93,7 @@ void main()
 
     int tamPop = 0;
     int tamCromossomo = graf->vertices;
-    int numgeracoes = 1000;
+    int numgeracoes = 30; //30 ~ 300
     float probCruzamento = 0.6, probMutacao = 1-probCruzamento;
 
     //iniciando a população
@@ -128,33 +137,21 @@ void main()
         melhoresValoresCorte[i] = -1;
 
     apresentarMelhoresCromossomos(graf,melhoresValoresCorte,melhoresSolucoes, tamPop, populacaogeral, contaPos, tamCromossomo);
-
+    int posMaior = maiorCorteMelhores(melhoresValoresCorte, tamPop);
+    fprintf(info, "O maior valor de corte da população inicial é de: %d (está no cromossomo %d).",melhoresValoresCorte[posMaior], posMaior);
+    int diferenca = 0, geracaoDeAlteracaoDoMaior = -1;
     int semconvergencias = 0;
     //agora vou fazer as mutações/crossover's e inserir na população
     //adicionei essa outra condicional para evitar de iterar quando atingir o número máximo de possibilidades que certa quantidade de vértices possam gerar de soluções
-    for(int geracao = 0; geracao < numgeracoes && contaPos < totalPop; geracao++){
+    for(int geracao = 0; geracao < numgeracoes /*&& contaPos < totalPop*/; geracao++){
         printf("\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\nGeracao %d:",geracao);
         //quando estiver a um certo periodo de gerações sem convergências na população, irá recriar e se nessa nova população conter algum cromossomo diferente da população geral, será utilizada esta.
+        //utilizo para fazer o código parar e não gerar mais populações
         if(semconvergencias >= 10){
-            printf("\nEsta sendo analisado uma nova populacao, pois a um certo periodo sem convergencia na populacao.\n");
-            int **popAux = criaPopulacao(graf,&totalPop,&tamPop,tamCromossomo);
-            int auxContaPos = contaPos;
-            for(int i = 0; i<tamPop; i++){
-                conferirInserirPopulacao(populacaogeral,popAux[i],&contaPos,tamCromossomo);
-            }
-            //caso nessa nova população não apareça nenhum cromossomo diferente, permanecerá a atual e será feito ou a mutação ou o crossover ainda na atual.
-            if(auxContaPos == contaPos){
-                printf("\nNao surgiu nenhum novo cromossomo, portanto, segue-se com a mesma populacao que esta sendo utilizada atualmente.\n");
-                semconvergencias++;
-            }else{
-                semconvergencias = 0;
-                printf("\nNova populacao que foi criada apos periodo sem convergencia onde a mesma sera utilizada para as proximas geracoes:\n");
-                imprimirMatriz(graf,popAux,tamPop);
-                for(int i = 0; i<tamPop; i++){
-                    novapopulacao[i] = popAux[i];
-                }
-            }
-            system("pause");
+            printf("Parou devido a falta de convergencia.");
+            fprintf(info,"\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\n");
+            fprintf(info, "\nDevido um periodo de 10 gerações sem convergência na população, o código parou na geração %d.",geracao);
+            break;
         }
         if(geracao == 0){
             for(int i = 0; i < tamPop; i++){
@@ -172,6 +169,7 @@ void main()
             printf("\nNova populacao que sera trabalhada\n");
             imprimirMatriz(graf,novapopulacao,tamPop);
             printf("\n");
+            //utilizo para guardar se o contaPos recebeu mais algum elemento na população
             int auxContaPos = contaPos;
             for(int i = 0; i<tamPop; i++){
                 conferirInserirPopulacao(populacaogeral,novapopulacao[i],&contaPos,tamCromossomo);
@@ -210,6 +208,16 @@ void main()
         imprimirMatriz(graf,populacaogeral,contaPos);
         //conferir os cortesmax da população geral
         apresentarMelhoresCromossomos(graf,melhoresValoresCorte,melhoresSolucoes, tamPop, populacaogeral, contaPos, tamCromossomo);
+        //conferir se existe um novo maior corte na geração
+        int posMaiorAux = maiorCorteMelhores(melhoresValoresCorte, tamPop);
+        if(melhoresValoresCorte[posMaior] < melhoresValoresCorte[posMaiorAux]){
+            diferenca = melhoresValoresCorte[posMaiorAux] - melhoresValoresCorte[posMaior];
+            fprintf(info,"\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\n");
+            fprintf(info,"\nNa geracao %d o cromossomo com maior corte maximo sera o %d, com valor de %d, substituindo o antigo maior cromossomo %d, que tem valor de %d, e foi encontrado na geracao %d.\n", geracao, posMaiorAux, melhoresValoresCorte[posMaiorAux], posMaior, melhoresValoresCorte[posMaior],geracaoDeAlteracaoDoMaior);
+            fprintf(info,"Portanto a diferenca do novo maior corte para o antigo maior corte eh de: %d\n",diferenca);
+            geracaoDeAlteracaoDoMaior = geracao;
+            posMaior = posMaiorAux;
+        }
     }
 
     //calcula na geral

@@ -4,16 +4,22 @@
 int ** criaPopulacao(GRAFO *gr, int *totalPop, int *tamPopul, int tamCromossomo){
     int aleat;
     if(gr->vertices < 3){
-        (*tamPopul) = (*totalPop)/2;
+        (*tamPopul) = (*totalPop);
     }else if(gr->vertices >= 3 && gr->vertices < 10){
+        (*tamPopul) = ((*totalPop)/2);
+    }else if(gr->vertices >= 10 && gr->vertices <= 14){
         (*tamPopul) = ((*totalPop)/4);
-    }else if(gr->vertices >= 10 && gr->vertices < 17){
-        (*tamPopul) = ((*totalPop)/8);
-    }else{
+    }else if(gr->vertices > 14 && gr->vertices < 100){
         //limitar no máximo com 10000
-        (*tamPopul) = 10000;
-        (*totalPop) = (*totalPop)/8;
-
+        (*tamPopul) = 5000;
+        if((*totalPop)/8 <= 10000){
+            (*totalPop) = 5000;
+        }else{
+            (*totalPop) = 7000;
+        }
+    }else{
+        (*tamPopul) = 7000;
+        (*totalPop) = 10000;
     }
     int **populacao = (int**)malloc((*tamPopul) * sizeof(int *));
     for(int i = 0; i < (*tamPopul); i++){
@@ -279,19 +285,41 @@ int menorcorteMelhores(int *vetorComCortedosMelhores, int tamPop){
             cromossomoDoMenor = i;
         }
     }
-    printf("\n-Menor valor dentro dos melhores cromossomos: %d (esta no cromossomo %d)\n",vetorComCortedosMelhores[cromossomoDoMenor],cromossomoDoMenor);
+    printf("\n\nMenor valor dentro dos melhores cromossomos: %d (esta no cromossomo %d)\n",vetorComCortedosMelhores[cromossomoDoMenor],cromossomoDoMenor);
     return cromossomoDoMenor;
 }
 
+int maiorCorteMelhores(int *vetorComCortedosMelhores, int tamPop){
+    int maior = vetorComCortedosMelhores[0], cromossomoDoMaior = 0;
+    for(int i = 1; i<tamPop; i++){
+        if(maior < vetorComCortedosMelhores[i]){
+            maior = vetorComCortedosMelhores[i];
+            cromossomoDoMaior = i;
+        }
+    }
+    printf("\nMaior valor dentro dos melhores cromossomos: %d (esta no cromossomo %d)\n",vetorComCortedosMelhores[cromossomoDoMaior],cromossomoDoMaior);
+    return cromossomoDoMaior;
+}
+
+
 void alocarMelhoresSolucoes(GRAFO *gr, int *melhoresValoresCorte, int **melhoressolucoes, int tamPop, int **populacaogeral, int contaPos, int tamCromossomo){
     //aqui está alocando a população na matrix que contém as melhores
-    if(contaPos <= tamPop){
-        //enquanto todas as posições não forem alocadas do vetor com os melhores cromossomos, ele irá receber a população que existe
-        for(int i = 0; i < contaPos; i++){
-            for(int j = tamCromossomo-1; j >= 0; j--){
-                melhoressolucoes[i][j] = populacaogeral[i][j];
-            }
+    if(contaPos <= tamPop+1){
+        if(contaPos > tamPop){
+            for(int i = 0; i < tamPop; i++){
+                for(int j = tamCromossomo-1; j >= 0; j--){
+                    melhoressolucoes[i][j] = populacaogeral[i][j];
+                }
             melhoresValoresCorte[i] = corteDoCromossomo(gr,melhoressolucoes[i]);
+            }
+        }else{
+        //enquanto todas as posições não forem alocadas do vetor com os melhores cromossomos, ele irá receber a população que existe
+            for(int i = 0; i < contaPos; i++){
+                for(int j = tamCromossomo-1; j >= 0; j--){
+                    melhoressolucoes[i][j] = populacaogeral[i][j];
+                }
+                melhoresValoresCorte[i] = corteDoCromossomo(gr,melhoressolucoes[i]);
+            }
         }
     }else{
         //quando todas as posições forem preenchidas, iremos fazer comparação entre o menor corte dentre esses melhores cromossomos com o corte do cromossomo que vem aparecendo na população geral
@@ -300,11 +328,10 @@ void alocarMelhoresSolucoes(GRAFO *gr, int *melhoresValoresCorte, int **melhores
             int corteCromossomo = corteDoCromossomo(gr,populacaogeral[i]);
             //comparar se o corte desse cromossomo é maior que o menor dentro do conjunto solução
             //se for adiciona no lugar
-
             printf("\nvalor do corte do cromossomo %d: %d\n",i,corteCromossomo);
             if(corteCromossomo > melhoresValoresCorte[posMenor]){
                 printf("\nPortanto, como o cromossomo %d que tem o menor valor entre o conjunto atual de melhores cromossomos, com  valor: %d\n",posMenor,melhoresValoresCorte[posMenor]);
-                printf("e como o cromossomo %d da populacao geral tem valor de corte maior que o menor dentre os cromossomos com os maiores cortemax(%d > %d) faz-se a troca.",i,corteCromossomo,melhoresValoresCorte[posMenor]);
+                printf("e como o cromossomo %d da populacao geral tem valor de corte maior que o menor dentre os cromossomos com os maiores cortemax(%d > %d) faz-se a troca.\n",i,corteCromossomo,melhoresValoresCorte[posMenor]);
                 for(int j = tamCromossomo-1; j>=0; j--){
                     melhoressolucoes[posMenor][j] = populacaogeral[i][j];
                     melhoresValoresCorte[posMenor] = corteCromossomo;
@@ -314,6 +341,8 @@ void alocarMelhoresSolucoes(GRAFO *gr, int *melhoresValoresCorte, int **melhores
                     populacaogeral[posMenor][j] = populacaogeral[i][j];
                     populacaogeral[i][j] = aux;
                 }
+                //atualiza onde esta o novo menor
+                posMenor = menorcorteMelhores(melhoresValoresCorte, tamPop);
             }
         }
     }
