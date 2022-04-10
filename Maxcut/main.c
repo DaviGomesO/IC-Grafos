@@ -9,7 +9,7 @@
 
 void imprime(GRAFO *gr, int *estruturaSubC, int w)
 {
-  printf("Vertices: %d.\nArestas: %d. \nLista de adjacencia da combinacao %d\n", gr->vertices, gr->arestas,w); // imprime numero de vértice e arestas
+  printf("Vertices: %d.\nArestas: %d. \nLista de adjacencia do cromossomo %d\n", gr->vertices, gr->arestas,w); // imprime numero de vértice e arestas
 
   for (int i = 0; i < gr->vertices; i++)
   {
@@ -25,7 +25,7 @@ void imprime(GRAFO *gr, int *estruturaSubC, int w)
     }
     else
     {
-      printf("- (Não está em nenhum subconjunto): ");
+      printf("- (Não esta em nenhum subconjunto): ");
     }
     ADJACENCIA *ad = gr->adj[i].cab; // chamo a cabeça da lista de adjacencia desta aresta
     while (ad)
@@ -37,12 +37,66 @@ void imprime(GRAFO *gr, int *estruturaSubC, int w)
   }
 }
 
+//tratar para cortes negativos
+void quick_sort(int *vetorComValores, int **populacao, int esquerda, int direita, int tamCromossomo) {
+    int i, j, x, y;
+
+    i = esquerda;
+    j = direita;
+    x = vetorComValores[(esquerda + direita) / 2];
+
+    while(i <= j) {
+        while(vetorComValores[i] < x && i < direita) {
+            i++;
+        }
+        while(vetorComValores[j] > x && j > esquerda) {
+            j--;
+        }
+        if(i <= j) {
+            y = vetorComValores[i];
+            vetorComValores[i] = vetorComValores[j];
+            vetorComValores[j] = y;
+            for(int gene = tamCromossomo-1; gene >= 0; gene--){
+                int aux = populacao[i][gene];
+                populacao[i][gene] = populacao[j][gene];
+                populacao[j][gene] = aux;
+            }
+            i++;
+            j--;
+        }
+    }
+
+    if(j > esquerda) {
+        quick_sort(vetorComValores, populacao, esquerda, j, tamCromossomo);
+    }
+    if(i < direita) {
+        quick_sort(vetorComValores, populacao, i, direita, tamCromossomo);
+    }
+}
+
+void insertion_sort(int *vetorComValores, int **populacao,int tam, int tamCromossomo){
+    int i, j, valor;
+
+    for(i = 1; i < tam; i++){
+        valor = vetorComValores[i];
+        for(j = i-1; j >= 0 && valor > vetorComValores[j]; j--){
+            vetorComValores[j+1] = vetorComValores[j];
+            for(int gene = tamCromossomo-1; gene >= 0; gene--){
+                int aux = populacao[j+1][gene];
+                populacao[j+1][gene] = populacao[j][gene];
+                populacao[j][gene] = aux;
+            }
+        }
+        vetorComValores[j+1] = valor;
+    }
+}
+
 void main()
 {
     FILE *arq;
     FILE *info;
-    arq = fopen("Exemplo.txt", "rt");
-    info = fopen("informações.txt", "wt");
+    arq = fopen("Testes/g05_60_0.txt", "rt");
+    info = fopen("informações g05_60_0.txt", "wt");
     GRAFO *graf, *grafreserva;
     char *result;
     int linha;
@@ -54,7 +108,7 @@ void main()
         return;
     }
     if(info != NULL)
-        printf("Arquivo informacoes criado com sucesso!!\n");
+        printf("Arquivo de informacoes criado com sucesso!!\n");
     else{
         printf("Problemas na criação do arquivo\n");
         return 1;
@@ -80,8 +134,10 @@ void main()
         else
         {
           result = fscanf(arq, "%d%d%d", &orig, &dest, &peso);
-          criaAresta(graf, orig, dest, peso,0);
-          criaAresta(grafreserva, orig, dest, peso,1);
+          //criaAresta(graf, orig, dest, peso,0);
+          //criaAresta(grafreserva, orig, dest, peso,1);
+          criaAresta(graf, orig-1, dest-1, peso,0);
+          criaAresta(grafreserva, orig-1, dest-1, peso,1);
         }
         linha++;
       }
@@ -97,54 +153,50 @@ void main()
     float probCruzamento = 0.6, probMutacao = 1-probCruzamento;
 
     //iniciando a população
+    //geracao 0
+    printf("\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\nGeracao inicial:\n");
     int **populacao = criaPopulacao(graf,&totalPop,&tamPop, tamCromossomo);
-    imprimirMatriz(graf,populacao,tamPop);
+    int *valoresCortesPopulacao = (int*)malloc(tamPop*sizeof(int));
+    //já cálculo os valores de corte dessa população
+    for(int cromossomo = 0; cromossomo < tamPop; cromossomo++){
+        valoresCortesPopulacao[cromossomo] = corteDoCromossomo(graf, populacao[cromossomo]);
+    }
 
-    //int *aptidao = (int*)malloc(tamPop * sizeof(int));
-    int **novapopulacao = (int**)malloc(tamPop * sizeof(int*));
-    int **melhoresSolucoes = (int**)malloc(tamPop * sizeof(int*));
-    for(int i = 0; i<tamPop; i++){
+    imprimirMatriz(graf,populacao,tamPop,valoresCortesPopulacao);
+    //ordena essa população em ordem decrescente
+    insertion_sort(valoresCortesPopulacao, populacao, tamPop, tamCromossomo);
+    printf("\nApos a ordenacao:\n");
+    imprimirMatriz(graf, populacao, tamPop, valoresCortesPopulacao);
+
+    //crio o vetor novapopulaçãp com o tamanho equivalente a quantidade do tamPop mais metade da população, ou o mesmo que 1,5 * tamPop
+    //para utilizar o mesmo mais na frente criando os cromossomos, ordenar e pegar os 'tamPop' melhores
+    int **novapopulacao = (int**)malloc((tamPop + (tamPop/2)) * sizeof(int*));
+    for(int i = 0; i<(tamPop + (tamPop/2)); i++){
         novapopulacao[i] = (int*)malloc(tamCromossomo*sizeof(int));
-        melhoresSolucoes[i] = (int*)malloc(tamCromossomo*sizeof(int));
     }
 
-    int **populacaogeral = (int**)malloc(totalPop * sizeof(int*));
-    for(int i = 0; i < totalPop; i++){
-        populacaogeral[i] = (int*)malloc(graf->vertices * sizeof(int));
-    }
+    //int posMaior = maiorCorteMelhores(valoresCortesPopulacao, tamPop);
+    int maiorCorte = valoresCortesPopulacao[0];
+    fprintf(info, "O maior valor de corte da população inicial é de: %d.\n",maiorCorte);
+    int diferenca = 0, geracaoDeAlteracaoDoMaior = 0, diferencaTotal = 0;
+    int semconvergencias = 0;
 
-    //inserir a populacao inicial na lista de combinações/população geral
-    //por meio de inserir em cada posição ou com o auxilio de um contador para controlar quantas posições ja foram inseridas
-
-    int contaPos = 0, auxcont = tamPop;
-
-    //usei o auxcont para inserir os primeiros cromossomos aleatorios da população inicial
-
-    while(auxcont > 0){
-        for(int i = 0; i < tamPop; i++){
-            //vai inserir na população geral apenas os cromossomos que sejam diferentes
-            conferirInserirPopulacao(populacaogeral,populacao[i],&contaPos,tamCromossomo);
-            auxcont--;
+    //aqui estou passando as primeiras posições para o vetor que vai gerar novos cromossomos
+    for(int i = 0; i < tamPop; i++){
+        for(int j = tamCromossomo-1; j >= 0; j--){
+            novapopulacao[i][j] = populacao[i][j];
         }
     }
+    // e passando a copia do vetor com os valores de corte, já ordenado
+    int *valoresCortesNovaPopulacao = (int*)malloc((tamPop + (tamPop/2))*sizeof(int));
+    for(int cromossomo = 0; cromossomo < tamPop; cromossomo++){
+        valoresCortesNovaPopulacao[cromossomo] = valoresCortesPopulacao[cromossomo];
+    }
 
-    printf("\nSegue a lista da populacao geral, ao adicionar a populacao inicial:\nobs: a populacao geral esta iniciando sem nenhuma alocacao.\n");
-    //imprimirMatriz(graf,populacaogeral,totalPop);
-    imprimirMatriz(graf,populacaogeral,contaPos);
 
-    int *melhoresValoresCorte = (int*)malloc(tamPop * sizeof(int));
-    for(int i = 0; i < tamPop; i++)
-        melhoresValoresCorte[i] = -1;
-
-    apresentarMelhoresCromossomos(graf,melhoresValoresCorte,melhoresSolucoes, tamPop, populacaogeral, contaPos, tamCromossomo);
-    int posMaior = maiorCorteMelhores(melhoresValoresCorte, tamPop);
-    fprintf(info, "O maior valor de corte da população inicial é de: %d (está no cromossomo %d).",melhoresValoresCorte[posMaior], posMaior);
-    int diferenca = 0, geracaoDeAlteracaoDoMaior = -1;
-    int semconvergencias = 0;
-    //agora vou fazer as mutações/crossover's e inserir na população
-    //adicionei essa outra condicional para evitar de iterar quando atingir o número máximo de possibilidades que certa quantidade de vértices possam gerar de soluções
-    for(int geracao = 0; geracao < numgeracoes /*&& contaPos < totalPop*/; geracao++){
+    for(int geracao = 1; geracao <= numgeracoes; geracao++){
         printf("\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\nGeracao %d:",geracao);
+
         //quando estiver a um certo periodo de gerações sem convergências na população, irá recriar e se nessa nova população conter algum cromossomo diferente da população geral, será utilizada esta.
         //utilizo para fazer o código parar e não gerar mais populações
         if(semconvergencias >= 10){
@@ -153,94 +205,65 @@ void main()
             fprintf(info, "\nDevido um periodo de 10 gerações sem convergência na população, o código parou na geração %d.",geracao);
             break;
         }
-        if(geracao == 0){
-            for(int i = 0; i < tamPop; i++){
-                for(int j = tamCromossomo-1; j >= 0; j--){
-                    novapopulacao[i][j] = populacao[i][j];
-                }
-                //CorteMaximo(graf,novapopulacao[i],&cortemax,&subconjuntoCorteMax,i);
-            }
-            printf("\nPopulacao que esta sendo trabalhada:\n");
-            imprimirMatriz(graf,novapopulacao,tamPop);
-            if(probCruzamento <= probMutacao)
-                mutacao(novapopulacao,populacao,geracao,contaPos,tamCromossomo,&probCruzamento,&probMutacao);
-            else
-                crossover(novapopulacao,populacao,geracao,contaPos,tamCromossomo,&probCruzamento,&probMutacao);
-            printf("\nNova populacao que sera trabalhada\n");
-            imprimirMatriz(graf,novapopulacao,tamPop);
-            printf("\n");
-            //utilizo para guardar se o contaPos recebeu mais algum elemento na população
-            int auxContaPos = contaPos;
-            for(int i = 0; i<tamPop; i++){
-                conferirInserirPopulacao(populacaogeral,novapopulacao[i],&contaPos,tamCromossomo);
-            }
-            //aqui estou utilizando para quando houver um certo numero de gerações e a cada 10 gerações, se não tiver entrado nenhum cromossomo diferente nas soluções, mais na frente ele irá recriar a população para trabalhar;
-            if(auxContaPos == contaPos){
-                semconvergencias++;
-            }else{
-                semconvergencias = 0;
-            }
-        }else{
-            int **populacaoaux = novapopulacao;
-            printf("\nPopulacao que esta sendo trabalhada:\n");
-            imprimirMatriz(graf,novapopulacao,tamPop);
 
-            if(probMutacao >= probCruzamento){
-                mutacao(novapopulacao,populacaoaux,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao);
-            }else{
-                crossover(novapopulacao,populacaoaux,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao);
+        printf("\nPopulacao que esta sendo trabalhada:\n");
+        //imprimirMatriz(graf,populacao,tamPop,valoresCortesNovaPopulacao);
+
+        //if(probCruzamento <= probMutacao)
+            mutacao(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao, valoresCortesNovaPopulacao);
+        //else
+            //crossover(novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao);
+
+        printf("\nNova populacao gerada\n");
+        //imprimirMatriz(graf,novapopulacao,(tamPop+(tamPop/2)),valoresCortesNovaPopulacao);
+
+        printf("\nOrdenando essa populacao...\n");
+        insertion_sort(valoresCortesNovaPopulacao,novapopulacao,(tamPop+(tamPop/2)),tamCromossomo);
+        //imprimirMatriz(graf,novapopulacao,(tamPop+(tamPop/2)),valoresCortesNovaPopulacao);
+
+
+        printf("\nNova populacao que sera trabalhada\n");
+        for(int i = 0; i < tamPop; i++){
+            for(int j = tamCromossomo-1; j >= 0; j--){
+                populacao[i][j] = novapopulacao[i][j];
             }
-            printf("\nNova populacao que sera trabalhada\n");
-            imprimirMatriz(graf,novapopulacao,tamPop);
-            printf("\n");
-            int auxContaPos = contaPos;
-            for(int i = 0; i<tamPop; i++){
-                conferirInserirPopulacao(populacaogeral,novapopulacao[i],&contaPos,tamCromossomo);
-            }
-            if(auxContaPos == contaPos){
-                semconvergencias++;
-            }else{
-                semconvergencias = 0;
-            }
+            valoresCortesPopulacao[i] = valoresCortesNovaPopulacao[i];
         }
-        printf("\nPopulacao geral:\n");
-        //imprimirMatriz(graf,populacaogeral,totalPop);
-        imprimirMatriz(graf,populacaogeral,contaPos);
-        //conferir os cortesmax da população geral
-        apresentarMelhoresCromossomos(graf,melhoresValoresCorte,melhoresSolucoes, tamPop, populacaogeral, contaPos, tamCromossomo);
-        //conferir se existe um novo maior corte na geração
-        int posMaiorAux = maiorCorteMelhores(melhoresValoresCorte, tamPop);
-        if(melhoresValoresCorte[posMaior] < melhoresValoresCorte[posMaiorAux]){
-            diferenca = melhoresValoresCorte[posMaiorAux] - melhoresValoresCorte[posMaior];
+        //imprimirMatriz(graf,populacao,tamPop,valoresCortesPopulacao);
+
+        //int posMaiorAux = maiorCorteMelhores(valoresCortesPopulacao, tamPop);
+        int maiorCorteAux = maiorCorte;
+        //verifico se o topo está sendo alterado
+        if(maiorCorteAux < valoresCortesPopulacao[0]){
+            maiorCorte = valoresCortesPopulacao[0];
+            diferenca = maiorCorte - maiorCorteAux;
+            //diferencaTotal += diferenca;
             fprintf(info,"\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\n");
-            fprintf(info,"\nNa geracao %d o cromossomo com maior corte maximo sera o %d, com valor de %d, substituindo o antigo maior cromossomo %d, que tem valor de %d, e foi encontrado na geracao %d.\n", geracao, posMaiorAux, melhoresValoresCorte[posMaiorAux], posMaior, melhoresValoresCorte[posMaior],geracaoDeAlteracaoDoMaior);
+            fprintf(info,"\nNa geracao %d o maior corte maximo sera %d, substituindo o antigo maior corte maximo, que tem valor de %d, e foi encontrado na geracao %d.\n", geracao, maiorCorte, maiorCorteAux,geracaoDeAlteracaoDoMaior);
             fprintf(info,"Portanto a diferenca do novo maior corte para o antigo maior corte eh de: %d\n",diferenca);
             geracaoDeAlteracaoDoMaior = geracao;
-            posMaior = posMaiorAux;
+            semconvergencias = 0;
+        }else{
+            semconvergencias++;
         }
+
+        //verificar se houve convergência observando apenas o topo
     }
 
-    //calcula na geral
-    /*for(int i = 0; i < contaPos; i++){
-        printf("\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\n");
-        printf("\nCalculo do corte maximo no cromossomo %d da populacao geral.",i);
-        CorteMaximo(graf,populacaogeral[i],&cortemax,&subconjuntoCorteMax,i);
-    }
-    printf("\n~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=\n");
-    printf("\nO Corte-Maximo foi obtido no cromossomo de posicao %d na populacao geral, e com valor de: %d\n", subconjuntoCorteMax, cortemax);
-    imprime(grafreserva,populacaogeral[subconjuntoCorteMax],subconjuntoCorteMax);
-    */
 
     //calcula entre os maiores cortes de cromossomos no conjunto selecionado
     int cortemaxMelhores = 0, posCromossomoMelhoresCorteMax = -1;
     for(int i = 0; i < tamPop; i++){
         printf("\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\n");
-        printf("\nCalculo do corte maximo no cromossomo %d entre os melhores cromossomos selecionados.",i);
-        CorteMaximo(graf,melhoresSolucoes[i],&cortemaxMelhores,&posCromossomoMelhoresCorteMax,i);
+        printf("\nCalculo do corte maximo no cromossomo %d entre os cromossomos de populacao.",i);
+        CorteMaximo(graf,populacao[i],&cortemaxMelhores,&posCromossomoMelhoresCorteMax,i);
     }
     printf("\n~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=\n");
-    printf("\nO Corte-Maximo foi obtido no cromossomo de posicao %d no conjunto dos melhores cortes de cromossomos, e com valor de: %d\n", posCromossomoMelhoresCorteMax, cortemaxMelhores);
-    imprime(grafreserva,melhoresSolucoes[posCromossomoMelhoresCorteMax],posCromossomoMelhoresCorteMax);
+    printf("\nO Corte-Maximo foi obtido no cromossomo da posicao %d na populacao, e com valor de: %d\n", posCromossomoMelhoresCorteMax, cortemaxMelhores);
+    imprime(grafreserva,populacao[posCromossomoMelhoresCorteMax],posCromossomoMelhoresCorteMax);
 
     fclose(arq);
+    fclose(info);
+
+    return 0;
 }

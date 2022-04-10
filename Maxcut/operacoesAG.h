@@ -103,28 +103,46 @@ void inserirNaGeral(int **populacaogeral, int tamPop, int **populacao, int tamCr
     }
 }
 
-void mutacao(int **novapopulacao, int **populacao, int geracao, int tamPop, int tamCromossomo, float *probCruzamento, float *probMutacao){
-    int cromossomoaleat = tamPop+1, genealeat = tamCromossomo+1;
-    //esse formato consegui deixar mais aleatorio sem apresentar sorteios viciados
-    srand(rand());
-    while(cromossomoaleat > tamPop){
-        cromossomoaleat = rand()%tamPop;
-    }
-    while(genealeat > tamCromossomo){
-        genealeat = rand()%tamCromossomo;
-    }
-    if(geracao == 0){
-        printf("\nAlterando no gene %d do cromossomo %d da populacao inicial.\n",genealeat+1,cromossomoaleat);
-    }else{
-        printf("\nAlterando no gene %d do cromossomo %d da geracao anterior.\n",genealeat+1,cromossomoaleat);
-    }
+void mutacao(GRAFO *gr,int **novapopulacao, int **populacao, int geracao, int tamPop, int tamCromossomo, float *probCruzamento, float *probMutacao, int *valoresCortesNovaPopulacao){
+    for(int geraCromossomo = tamPop; geraCromossomo < (tamPop+(tamPop/2)); geraCromossomo++){
+        int cromossomoaleat = tamPop+1, genealeat = tamCromossomo+1;
+        int qtdGenes = tamCromossomo+1;
+        //esse formato consegui deixar mais aleatorio sem apresentar sorteios viciados
+        srand(rand());
+        while(cromossomoaleat > tamPop){
+            cromossomoaleat = rand()%tamPop;
+        }
 
-    if(populacao[cromossomoaleat][genealeat] == azul){
-        printf("(azul -> vermelho)\n");
-        novapopulacao[cromossomoaleat][genealeat] = vermelho;
-    }else if(populacao[cromossomoaleat][genealeat] == vermelho){
-        printf("(vermelho -> azul)\n");
-        novapopulacao[cromossomoaleat][genealeat] = azul;
+        //ajustar aqui para adicionar nas posições posteriores
+        for(int i = tamCromossomo-1; i>=0; i--){
+            novapopulacao[geraCromossomo][i] = populacao[cromossomoaleat][i];
+        }
+
+        while(qtdGenes > tamCromossomo || qtdGenes < 1){
+            qtdGenes = rand()%tamCromossomo;
+        }
+        printf("\nSerao alterados %d genes:",qtdGenes);
+        for(int vezes = 1; vezes <= qtdGenes; vezes++){
+            genealeat = tamCromossomo+1;
+            while(genealeat > tamCromossomo){
+                genealeat = rand()%tamCromossomo;
+            }
+            if(geracao == 1){
+                printf("\nFazendo a alteracao %d: no gene %d do cromossomo %d da populacao inicial.\n",vezes, genealeat+1,cromossomoaleat);
+            }else{
+                printf("\nFazendo a alteracao %d: no gene %d do cromossomo %d da geracao anterior e adicionando no cromossomo %d.\n",vezes, genealeat+1,cromossomoaleat, geraCromossomo);
+            }
+            //tratar o caso de quando sorteia o gene mais de uma vez para ser alterado
+            if(populacao[cromossomoaleat][genealeat] == azul){
+                printf("(azul -> vermelho)\n");
+                novapopulacao[geraCromossomo][genealeat] = vermelho;
+            }else if(populacao[cromossomoaleat][genealeat] == vermelho){
+                printf("(vermelho -> azul)\n");
+                novapopulacao[geraCromossomo][genealeat] = azul;
+            }
+        }
+        printf("\n");
+        valoresCortesNovaPopulacao[geraCromossomo] = corteDoCromossomo(gr,novapopulacao[geraCromossomo]);
     }
 
     (*probCruzamento) = (*probCruzamento)+((*probCruzamento)*0.05);
@@ -353,7 +371,7 @@ void apresentarMelhoresCromossomos(GRAFO *graf, int *melhoresValoresCorte, int *
     alocarMelhoresSolucoes(graf,melhoresValoresCorte,melhoresSolucoes, tamPop, populacaogeral, contaPos, tamCromossomo);
 
     printf("\nOs Cromossomos com os melhores cortes sao:\n");
-    imprimirMatriz(graf,melhoresSolucoes,tamPop);
+    imprimirMatriz(graf,melhoresSolucoes,tamPop, melhoresValoresCorte);
     for(int i = 0; i < tamPop; i++)
         printf("\nvalor de corte do cromossomo %d entre os melhores: %d",i,melhoresValoresCorte[i]);
 }

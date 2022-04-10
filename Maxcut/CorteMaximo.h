@@ -19,7 +19,7 @@ void preencheMatriz(GRAFO *gr, int **matCombinacoes, int totalPop)
   }
 }
 
-void imprimirMatriz(GRAFO *gr, int **matCombinacoes, int totalPop)
+void imprimirMatriz(GRAFO *gr, int **matCombinacoes, int totalPop, int *valoresCortes)
 {
   for (int i = 0; i < totalPop; i++)
   {
@@ -41,7 +41,7 @@ void imprimirMatriz(GRAFO *gr, int **matCombinacoes, int totalPop)
       }
       printf("] ");
     }
-    printf("\n");
+    printf(" - valor de corte deste cromossomo: %d\n",valoresCortes[i]);
   }
 }
 
@@ -100,7 +100,7 @@ void CorteMaximo(GRAFO *gr, int *estruturaSubConj, int *cortemax, int *subconjCo
     }
   }
   printf("\nCorte Maximo: %d.\nCorte Interno entre as arestas no subconjunto vermelho: %d\nCorte interno entre as arestas do subconjunto azul: %d\n\n", pesoMaxExt, PesoMaxIntVer, PesoMaxIntAzul);
-  if(pesoMaxExt >= (*cortemax)){
+  if(pesoMaxExt > (*cortemax)){
     (*cortemax) = pesoMaxExt;
     (*subconjCorteMax) = subconjuntodavez;
   }
