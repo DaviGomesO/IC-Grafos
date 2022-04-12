@@ -96,7 +96,7 @@ void main()
     FILE *arq;
     FILE *info;
     arq = fopen("Testes/g05_60_0.txt", "rt");
-    info = fopen("informações g05_60_0.txt", "wt");
+    info = fopen("informações g05_60_0 com crossover prevalecendo os genes iguais.txt", "wt");
     GRAFO *graf, *grafreserva;
     char *result;
     int linha;
@@ -149,7 +149,7 @@ void main()
 
     int tamPop = 0;
     int tamCromossomo = graf->vertices;
-    int numgeracoes = 30; //30 ~ 300
+    int numgeracoes = 100; //30 ~ 300
     float probCruzamento = 0.6, probMutacao = 1-probCruzamento;
 
     //iniciando a população
@@ -199,20 +199,23 @@ void main()
 
         //quando estiver a um certo periodo de gerações sem convergências na população, irá recriar e se nessa nova população conter algum cromossomo diferente da população geral, será utilizada esta.
         //utilizo para fazer o código parar e não gerar mais populações
-        if(semconvergencias >= 10){
+        if(semconvergencias >= numgeracoes/5){
             printf("Parou devido a falta de convergencia.");
             fprintf(info,"\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\n");
-            fprintf(info, "\nDevido um periodo de 10 gerações sem convergência na população, o código parou na geração %d.",geracao);
+            fprintf(info, "\nDevido um periodo de %d gerações sem convergência na população, o código parou na geração %d.", numgeracoes/5,geracao);
             break;
         }
 
         printf("\nPopulacao que esta sendo trabalhada:\n");
         //imprimirMatriz(graf,populacao,tamPop,valoresCortesNovaPopulacao);
 
-        //if(probCruzamento <= probMutacao)
+        if(probCruzamento <= probMutacao){
             mutacao(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao, valoresCortesNovaPopulacao);
-        //else
-            //crossover(novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao);
+        }else{
+            //crossover(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao,valoresCortesNovaPopulacao);
+            //crossoverPercentual(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao,valoresCortesNovaPopulacao);
+            crossoverPrevaleceIgualdade(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao,valoresCortesNovaPopulacao);
+        }
 
         printf("\nNova populacao gerada\n");
         //imprimirMatriz(graf,novapopulacao,(tamPop+(tamPop/2)),valoresCortesNovaPopulacao);
@@ -237,7 +240,7 @@ void main()
         if(maiorCorteAux < valoresCortesPopulacao[0]){
             maiorCorte = valoresCortesPopulacao[0];
             diferenca = maiorCorte - maiorCorteAux;
-            //diferencaTotal += diferenca;
+            diferencaTotal += diferenca;
             fprintf(info,"\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\n");
             fprintf(info,"\nNa geracao %d o maior corte maximo sera %d, substituindo o antigo maior corte maximo, que tem valor de %d, e foi encontrado na geracao %d.\n", geracao, maiorCorte, maiorCorteAux,geracaoDeAlteracaoDoMaior);
             fprintf(info,"Portanto a diferenca do novo maior corte para o antigo maior corte eh de: %d\n",diferenca);
@@ -261,6 +264,9 @@ void main()
     printf("\n~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=\n");
     printf("\nO Corte-Maximo foi obtido no cromossomo da posicao %d na populacao, e com valor de: %d\n", posCromossomoMelhoresCorteMax, cortemaxMelhores);
     imprime(grafreserva,populacao[posCromossomoMelhoresCorteMax],posCromossomoMelhoresCorteMax);
+
+    fprintf(info,"\n~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=\n");
+    fprintf(info,"\nA diferença total do corte maximo encontrado na população inicial para o último corte maximo encontrado na geração %d é de: %d", geracaoDeAlteracaoDoMaior, diferencaTotal);
 
     fclose(arq);
     fclose(info);
