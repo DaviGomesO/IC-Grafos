@@ -99,7 +99,7 @@ void CorteMaximo(GRAFO *gr, int *estruturaSubConj, int *cortemax, int *subconjCo
       }
     }
   }
-  printf("\nCorte Maximo: %d.\nCorte Interno entre as arestas no subconjunto vermelho: %d\nCorte interno entre as arestas do subconjunto azul: %d\n\n", pesoMaxExt, PesoMaxIntVer, PesoMaxIntAzul);
+  //printf("\nCorte Maximo: %d.\nCorte Interno entre as arestas no subconjunto vermelho: %d\nCorte interno entre as arestas do subconjunto azul: %d\n\n", pesoMaxExt, PesoMaxIntVer, PesoMaxIntAzul);
   if(pesoMaxExt > (*cortemax)){
     (*cortemax) = pesoMaxExt;
     (*subconjCorteMax) = subconjuntodavez;

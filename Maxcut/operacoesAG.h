@@ -104,6 +104,7 @@ void inserirNaGeral(int **populacaogeral, int tamPop, int **populacao, int tamCr
 }
 
 void mutacao(GRAFO *gr,int **novapopulacao, int **populacao, int geracao, int tamPop, int tamCromossomo, float *probCruzamento, float *probMutacao, int *valoresCortesNovaPopulacao){
+    printf("\nEsta utilizando a mutacao.\n");
     for(int geraCromossomo = tamPop; geraCromossomo < (tamPop+(tamPop/2)); geraCromossomo++){
         int cromossomoaleat = tamPop+1, genealeat = tamCromossomo+1;
         int qtdGenes = tamCromossomo+1;
@@ -121,27 +122,27 @@ void mutacao(GRAFO *gr,int **novapopulacao, int **populacao, int geracao, int ta
         while(qtdGenes > tamCromossomo || qtdGenes < 1){
             qtdGenes = rand()%tamCromossomo;
         }
-        printf("\nSera(ao) alterado(s) %d gene(s):",qtdGenes);
+        //printf("\nSera(ao) alterado(s) %d gene(s):",qtdGenes);
         for(int vezes = 1; vezes <= qtdGenes; vezes++){
             genealeat = tamCromossomo+1;
             while(genealeat > tamCromossomo){
                 genealeat = rand()%tamCromossomo;
             }
-            if(geracao == 1){
+            /*if(geracao == 1){
                 printf("\nFazendo a alteracao %d: no gene %d do cromossomo %d da populacao inicial.\n",vezes, genealeat+1,cromossomoaleat);
             }else{
                 printf("\nFazendo a alteracao %d: no gene %d do cromossomo %d da geracao anterior e adicionando no cromossomo %d.\n",vezes, genealeat+1,cromossomoaleat, geraCromossomo);
-            }
+            }*/
             //tratar o caso de quando sorteia o gene mais de uma vez para ser alterado
             if(populacao[cromossomoaleat][genealeat] == azul){
-                printf("(azul -> vermelho)\n");
+                //printf("(azul -> vermelho)\n");
                 novapopulacao[geraCromossomo][genealeat] = vermelho;
             }else if(populacao[cromossomoaleat][genealeat] == vermelho){
-                printf("(vermelho -> azul)\n");
+                //printf("(vermelho -> azul)\n");
                 novapopulacao[geraCromossomo][genealeat] = azul;
             }
         }
-        printf("\n");
+        //printf("\n");
         valoresCortesNovaPopulacao[geraCromossomo] = corteDoCromossomo(gr,novapopulacao[geraCromossomo]);
     }
 
@@ -151,6 +152,7 @@ void mutacao(GRAFO *gr,int **novapopulacao, int **populacao, int geracao, int ta
 }
 
 void crossover(GRAFO *gr, int **novapopulacao, int **populacao, int geracao, int tamPop, int tamCromossomo, float *probCruzamento, float *probMutacao,  int *valoresCortesNovaPopulacao){
+    printf("\nEsta utilizando o crossover.\n");
     for(int geraCromossomo = tamPop; geraCromossomo < (tamPop+(tamPop/2)); geraCromossomo = geraCromossomo + 2){
         int cromossomoaleat1 = tamPop+1, cromossomoaleat2 = tamPop+1;
         int genealeat1 = tamCromossomo+1, genealeat2 = tamCromossomo+1;
@@ -185,11 +187,11 @@ void crossover(GRAFO *gr, int **novapopulacao, int **populacao, int geracao, int
             genealeat1 = genealeat2;
             genealeat2 = aux;
         }
-        if(geracao == 1){
+        /*if(geracao == 1){
             printf("\nCombinando os genes %d e %d dos cromossomos %d e %d, da populacao inicial.\n",genealeat1+1,genealeat2+1,cromossomoaleat1,cromossomoaleat2);
         }else{
             printf("\nCombinando os genes %d e %d dos cromossomos %d e %d, da geracao anterior.\n",genealeat1+1,genealeat2+1,cromossomoaleat1,cromossomoaleat2);
-        }
+        }*/
 
         //criei esses dois vetores para receber o cromossomo sorteado da população mais na frente
         int *novoCromossomo1, *novoCromossomo2;
@@ -202,7 +204,7 @@ void crossover(GRAFO *gr, int **novapopulacao, int **populacao, int geracao, int
         }
 
         //estou imprimindo esses dois cromossomos para confirmar se pegou certo
-        printf("\nCromossomo %d - ",cromossomoaleat1);
+       /* printf("\nCromossomo %d - ",cromossomoaleat1);
         for(int j = 0; j<tamCromossomo; j++){
             printf("[");
             if(novoCromossomo1[j] == azul)
@@ -221,6 +223,7 @@ void crossover(GRAFO *gr, int **novapopulacao, int **populacao, int geracao, int
                 printf("vermelho");
             printf("]");
         }
+        */
 
         //vou adicionar ao final da população e depois ordenar para pegar os tamPop's primeiros
 
@@ -230,7 +233,7 @@ void crossover(GRAFO *gr, int **novapopulacao, int **populacao, int geracao, int
         novoCromossomo1[genealeat1] = populacao[cromossomoaleat2][genealeat1];
         novoCromossomo1[genealeat2] = populacao[cromossomoaleat2][genealeat2];
 
-
+        /*
         //imprimo os vetores combinados
         printf("\nNovo cromossomo gerado - ");
         for(int j = 0; j<tamCromossomo; j++){
@@ -252,7 +255,7 @@ void crossover(GRAFO *gr, int **novapopulacao, int **populacao, int geracao, int
             printf("]");
         }
         printf("\n\n");
-
+        */
         for(int i = 0; i<tamCromossomo; i++){
             novapopulacao[geraCromossomo][i] = novoCromossomo1[i];
             novapopulacao[geraCromossomo+1][i] = novoCromossomo2[i];
@@ -268,6 +271,7 @@ void crossover(GRAFO *gr, int **novapopulacao, int **populacao, int geracao, int
 }
 
 void crossoverPercentual(GRAFO *gr, int **novapopulacao, int **populacao, int geracao, int tamPop, int tamCromossomo, float *probCruzamento, float *probMutacao,  int *valoresCortesNovaPopulacao){
+    printf("\nEsta utilizando o crossover.\n");
     for(int geraCromossomo = tamPop; geraCromossomo < (tamPop+(tamPop/2)); geraCromossomo = geraCromossomo + 2){
         int cromossomoaleat1 = tamPop+1, cromossomoaleat2 = tamPop+1;
         int qtdgene = tamCromossomo+1;
@@ -294,11 +298,11 @@ void crossoverPercentual(GRAFO *gr, int **novapopulacao, int **populacao, int ge
             qtdgene = rand()%tamCromossomo;
         }
 
-        if(geracao == 1){
+        /*if(geracao == 1){
             printf("\nCombinando os %d primeiros genes com os %d ultimos genes dos cromossomos %d e %d, da populacao inicial.\n",qtdgene,tamCromossomo-qtdgene,cromossomoaleat1,cromossomoaleat2);
         }else{
             printf("\nCombinando os %d primeiros genes com os %d ultimos genes dos cromossomos %d e %d, da geracao anterior.\n",qtdgene,tamCromossomo-qtdgene,cromossomoaleat1,cromossomoaleat2);
-        }
+        }*/
 
         //criei esses dois vetores para receber o cromossomo sorteado da população mais na frente
         int *novoCromossomo1, *novoCromossomo2;
@@ -310,6 +314,7 @@ void crossoverPercentual(GRAFO *gr, int **novapopulacao, int **populacao, int ge
             novoCromossomo2[i] = novapopulacao[cromossomoaleat2][i];
         }
 
+        /*
         //estou imprimindo esses dois cromossomos para confirmar se pegou certo
         printf("\nCromossomo %d - ",cromossomoaleat1);
         for(int j = 0; j<tamCromossomo; j++){
@@ -330,6 +335,7 @@ void crossoverPercentual(GRAFO *gr, int **novapopulacao, int **populacao, int ge
                 printf("vermelho");
             printf("]");
         }
+        */
 
         int cont;
         for(cont = 0; cont < qtdgene; cont++){
@@ -342,6 +348,7 @@ void crossoverPercentual(GRAFO *gr, int **novapopulacao, int **populacao, int ge
             novoCromossomo2[cont] = populacao[cromossomoaleat2][cont];
         }
 
+        /*
         //imprimo os vetores combinados
         printf("\nNovo cromossomo gerado - ");
         for(int j = 0; j<tamCromossomo; j++){
@@ -363,6 +370,7 @@ void crossoverPercentual(GRAFO *gr, int **novapopulacao, int **populacao, int ge
             printf("]");
         }
         printf("\n\n");
+        */
 
         for(int i = 0; i<tamCromossomo; i++){
             novapopulacao[geraCromossomo][i] = novoCromossomo1[i];
@@ -379,6 +387,7 @@ void crossoverPercentual(GRAFO *gr, int **novapopulacao, int **populacao, int ge
 }
 
 void crossoverPrevaleceIgualdade(GRAFO *gr, int **novapopulacao, int **populacao, int geracao, int tamPop, int tamCromossomo, float *probCruzamento, float *probMutacao,  int *valoresCortesNovaPopulacao){
+    printf("\nEsta utilizando o crossover.\n");
     for(int geraCromossomo = tamPop; geraCromossomo < (tamPop+(tamPop/2)); geraCromossomo = geraCromossomo + 2){
         int cromossomoaleat1 = tamPop+1, cromossomoaleat2 = tamPop+1;
         int qtdgene = tamCromossomo+1;
@@ -405,12 +414,13 @@ void crossoverPrevaleceIgualdade(GRAFO *gr, int **novapopulacao, int **populacao
             qtdgene = rand()%tamCromossomo;
         }
 
+        /*
         if(geracao == 1){
             printf("\nCombinando os %d primeiros genes com os %d ultimos genes dos cromossomos %d e %d, da populacao inicial.\n",qtdgene,tamCromossomo-qtdgene,cromossomoaleat1,cromossomoaleat2);
         }else{
             printf("\nCombinando os %d primeiros genes com os %d ultimos genes dos cromossomos %d e %d, da geracao anterior.\n",qtdgene,tamCromossomo-qtdgene,cromossomoaleat1,cromossomoaleat2);
         }
-
+        */
         //criei esses dois vetores para receber o cromossomo sorteado da população mais na frente
         int *novoCromossomo1, *novoCromossomo2;
         novoCromossomo1 = (int*)malloc(tamCromossomo*sizeof(int));
@@ -421,6 +431,7 @@ void crossoverPrevaleceIgualdade(GRAFO *gr, int **novapopulacao, int **populacao
             novoCromossomo2[i] = novapopulacao[cromossomoaleat2][i];
         }
 
+        /*
         //estou imprimindo esses dois cromossomos para confirmar se pegou certo
         printf("\nCromossomo %d - ",cromossomoaleat1);
         for(int j = 0; j<tamCromossomo; j++){
@@ -441,11 +452,12 @@ void crossoverPrevaleceIgualdade(GRAFO *gr, int **novapopulacao, int **populacao
                 printf("vermelho");
             printf("]");
         }
+        */
 
         for(int cont = 0; cont<tamCromossomo; cont++){
             if(populacao[cromossomoaleat1][cont] == populacao[cromossomoaleat2][cont]){
                 //onde os genes são iguais, eles prevalecem
-                printf("\nAmbos os cromossomos sao iguais no gene %d.",cont);
+                //printf("\nAmbos os cromossomos sao iguais no gene %d.",cont);
                 novoCromossomo1[cont] = populacao[cromossomoaleat1][cont];
                 novoCromossomo2[cont] = populacao[cromossomoaleat2][cont];
             }else{
@@ -467,6 +479,7 @@ void crossoverPrevaleceIgualdade(GRAFO *gr, int **novapopulacao, int **populacao
             }
         }
 
+        /*
         //imprimo os vetores combinados
         printf("\nNovo cromossomo gerado - ");
         for(int j = 0; j<tamCromossomo; j++){
@@ -488,6 +501,7 @@ void crossoverPrevaleceIgualdade(GRAFO *gr, int **novapopulacao, int **populacao
             printf("]");
         }
         printf("\n\n");
+        */
 
         for(int i = 0; i<tamCromossomo; i++){
             novapopulacao[geraCromossomo][i] = novoCromossomo1[i];
