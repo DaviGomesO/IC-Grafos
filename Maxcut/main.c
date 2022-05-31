@@ -92,7 +92,83 @@ void insertion_sort(int *vetorComValores, int **populacao,int tam, int tamCromos
     }
 }
 
-void ProcuraMelhorSolucaoNoMelhorCromossomo(FILE *info, GRAFO *graf, GRAFO *grafreserva, int **populacao, int **novapopulacao, int *valoresCortesNovaPopulacao, int *valoresCortesPopulacao, int tamPop, int tamCromossomo){
+void conferirRestricao(GRAFO *grafo, int **populacao, int tamPop, int tamCromossomo){
+    float *C = (float*)malloc(grafo->vertices*sizeof(float));
+    float *Cpop = (float*)malloc(grafo->vertices*sizeof(float));
+    //int *Cazul = (int*)malloc(grafo->vertices*sizeof(int));
+    //int *Cverm = (int*)malloc(grafo->vertices*sizeof(int));
+    int pop = 0;
+    for(int i = 0; i < grafo->vertices; i++){
+        C[i] = 0;
+        //Cazul[i] = 0;
+        //Cverm[i] = 0;
+        Cpop[i] = 0;
+        ADJACENCIA *aux = grafo->adj[i].cab;
+        if(aux != NULL){
+            while(aux != NULL){
+                C[i] += aux->peso;
+                printf("%d",aux->vertice);
+                aux = aux->prox;
+            }
+        }
+        printf(" ");
+    }
+
+    for(int i = 0; i < grafo->vertices; i++){
+        printf("\nvalor total do corte-maximo das arestas para o vertice %d: %.0f\n",i,C[i]);
+    }
+
+    while(pop < tamPop){
+        printf("\nVerificando cromossomo %d:\n",pop);
+
+        for(int j = 0; j<grafo->vertices;j++){
+            printf("[");
+            if(populacao[pop][j] == azul){
+                printf("azul");
+            }else if(populacao[pop][j] == vermelho){
+                printf("vermelho");
+            }
+            printf("]");
+        }
+        printf("\n");
+        for(int gene = 0; gene < tamCromossomo; gene++){
+            Cpop[gene] = 0;
+            ADJACENCIA *aux = grafo->adj[gene].cab;
+            if(aux != NULL){
+                while(aux != NULL){
+                    printf("%d ",aux->vertice);
+                    if(populacao[pop][aux->vertice] == azul){
+                        Cpop[gene] += ((aux->peso)*1);
+                    }else if(populacao[pop][aux->vertice] == vermelho){
+                        Cpop[gene] += ((aux->peso)*0);
+                    }
+                    aux = aux->prox;
+                }
+            }
+            printf("\n");
+            if(populacao[pop][gene] == azul){
+                printf("%.1f <= %.1f\n",Cpop[gene],C[gene]/2);
+                if(Cpop[gene] <= C[gene]/2){
+                    printf("gene %d esta sendo aceito.\n",gene+1);
+                }else{
+                    printf("esse cromossomo nao eh aceito pois o vertice %d da populacao %d nao atende as restricoes.\n",gene,pop);
+                    break;
+                }
+            }else if(populacao[pop][gene] == vermelho){
+                printf("%.1f >= %.1f\n",Cpop[gene],C[gene]/2);
+                if(Cpop[gene] >= C[gene]/2){
+                    printf("gene %d esta sendo aceito.\n",gene+1);
+                }else{
+                    printf("esse cromossomo nao eh aceito pois o vertice %d da populacao %d nao atende as restricoes.\n",gene,pop);
+                    break;
+                }
+            }
+        }
+        pop++;
+    }
+}
+
+void ProcuraMelhorSolucaoNoMelhorCromossomo(FILE *info, GRAFO *graf, GRAFO *grafreserva, int **populacao, int **novapopulacao, int *valoresCortesNovaPopulacao, int *valoresCortesPopulacao, int tamPop, int tamCromossomo, int pos){
     //aqui irei verificar a possibilidade para uma geração de algum cromossomo melhor que o atual melhor, tendo como base esse atual melhor.
     // alterando cada vértice para o subconjunto contrario ao atual
     int **matrizParaVerificarAlteracaoDeSubconjunto = (int**)malloc(graf->vertices*sizeof(int*));
@@ -104,7 +180,7 @@ void ProcuraMelhorSolucaoNoMelhorCromossomo(FILE *info, GRAFO *graf, GRAFO *graf
     int *melhorCromossomoAtual = (int*)malloc(graf->vertices*sizeof(int));
     //printf("\nO melhor cromossomo atual eh:\n");
     for(int i = 0; i<graf->vertices;i++){
-        melhorCromossomoAtual[i] = populacao[0][i];
+        melhorCromossomoAtual[i] = populacao[pos][i];
         //printf("[");
         if(melhorCromossomoAtual[i] == azul){
             //printf("azul");
@@ -114,8 +190,11 @@ void ProcuraMelhorSolucaoNoMelhorCromossomo(FILE *info, GRAFO *graf, GRAFO *graf
         //printf("]");
     }
 
-    printf("\nO valor de corte do melhor cromossomo atual eh: %d\n", corteDoCromossomo(graf,melhorCromossomoAtual));
-
+    if(pos == 1){
+        printf("\nO valor de corte do melhor cromossomo atual eh: %d\n", corteDoCromossomo(graf,melhorCromossomoAtual));
+    }else{
+        printf("\nO valor de corte do cromossomo atual eh: %d\n", corteDoCromossomo(graf,melhorCromossomoAtual));
+    }
     for(int i = 0; i < graf->vertices; i++){
         int Cint = 0, Cext = 0;
         ADJACENCIA *aux = grafreserva->adj[i].cab;
@@ -198,12 +277,12 @@ void main()
 {
     FILE *arq;
     FILE *info;
-    arq = fopen("Testes/g05_100_0.txt", "rt");
-    info = fopen("Informações 2.txt", "wt");
+    arq = fopen("Exemplo.txt", "rt");
+    info = fopen("Informações 5.txt", "wt");
     GRAFO *graf, *grafreserva;
     char *result;
     int linha;
-    int numgeracoes = 50;
+    int numgeracoes = 100;
 
     // Se houver erro na abertura
     if (arq == NULL)
@@ -238,10 +317,10 @@ void main()
         else
         {
           result = fscanf(arq, "%d%d%d", &orig, &dest, &peso);
-          //criaAresta(graf, orig, dest, peso,0);
-          //criaAresta(grafreserva, orig, dest, peso,1);
-          criaAresta(graf, orig-1, dest-1, peso,0);
-          criaAresta(grafreserva, orig-1, dest-1, peso,1);
+          criaAresta(graf, orig, dest, peso,0);
+          criaAresta(grafreserva, orig, dest, peso,1);
+          //criaAresta(graf, orig-1, dest-1, peso,0);
+          //criaAresta(grafreserva, orig-1, dest-1, peso,1);
         }
         linha++;
       }
@@ -297,7 +376,7 @@ void main()
 
     //ilha
     int maiorCorteAux = maiorCorte;
-    ProcuraMelhorSolucaoNoMelhorCromossomo(info, graf, grafreserva, populacao, novapopulacao, valoresCortesNovaPopulacao, valoresCortesPopulacao, tamPop, tamCromossomo);
+    ProcuraMelhorSolucaoNoMelhorCromossomo(info, graf, grafreserva, populacao, novapopulacao, valoresCortesNovaPopulacao, valoresCortesPopulacao, tamPop, tamCromossomo,0); // passei para procurar na primeira posição
     maiorCorte = valoresCortesPopulacao[0];
     diferenca = maiorCorte - maiorCorteAux;
     diferencaTotal += diferenca;
@@ -307,17 +386,64 @@ void main()
         fprintf(info,"\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\n");
     }
 
+    conferirRestricao(grafreserva,populacao,tamPop,tamCromossomo);
+
+    /*
     for(int geracao = 1; geracao <= numgeracoes; geracao++){
         printf("\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\nGeracao %d:",geracao);
 
         //quando estiver a um certo periodo de gerações sem convergências na população, irá recriar e se nessa nova população conter algum cromossomo diferente da população geral, será utilizada esta.
         //utilizo para fazer o código parar e não gerar mais populações
-        /*if(semconvergencias >= numgeracoes/5){
-            printf("Parou devido a falta de convergencia.");
-            fprintf(info,"\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\n");
-            fprintf(info, "\nDevido um periodo de %d gerações sem convergência na população, o código parou na geração %d.", numgeracoes/5,geracao);
-            break;
-        }*/
+        if(semconvergencias >= numgeracoes/5){
+            printf("\nBusca local no cromossomo %d:\n",tamPop);
+            maiorCorteAux = maiorCorte;
+            ProcuraMelhorSolucaoNoMelhorCromossomo(info, graf, grafreserva, populacao, novapopulacao, valoresCortesNovaPopulacao, valoresCortesPopulacao, tamPop, tamCromossomo, tamPop-1); //ultimo cromossomoif(maiorCorteAux < valoresCortesPopulacao[0]){
+            if(maiorCorteAux < valoresCortesPopulacao[0]){
+                maiorCorteAux = maiorCorte = valoresCortesPopulacao[0];
+                diferenca = maiorCorte - maiorCorteAux;
+                diferencaTotal += diferenca;
+                fprintf(info,"\nApós um peridodo de %d gerações sem convergência, na geracao %d o maior corte maximo sera %d, encontrado na alteração do subconjunto de um gene, substituindo o antigo maior corte maximo do cromossomo da ultima posição da população, que tem valor de %d, e foi encontrado na geração %d.\n", numgeracoes/5,geracao, maiorCorte, maiorCorteAux,geracaoDeAlteracaoDoMaior);
+                fprintf(info,"Portanto a diferenca do novo maior corte para o antigo maior corte eh de: %d\n",diferenca);
+                geracaoDeAlteracaoDoMaior = geracao;
+                semconvergencias = 0;
+            }
+
+
+            printf("\nBusca local no cromossomo %d:\n",(tamPop-1)/2);
+            ProcuraMelhorSolucaoNoMelhorCromossomo(info, graf, grafreserva, populacao, novapopulacao, valoresCortesNovaPopulacao, valoresCortesPopulacao, tamPop, tamCromossomo, (tamPop-1)/2); //posição intermediaria
+            if(maiorCorteAux < valoresCortesPopulacao[0]){
+                maiorCorteAux = maiorCorte = valoresCortesPopulacao[0];
+                diferenca = maiorCorte - maiorCorteAux;
+                diferencaTotal += diferenca;
+                fprintf(info,"\nApós um peridodo de %d gerações sem convergência, na geracao %d o maior corte maximo sera %d, encontrado na alteração do subconjunto de um gene, substituindo o antigo maior corte maximo do cromossomo da posição %d da população, que tem valor de %d, e foi encontrado na geração %d.\n", numgeracoes/5,geracao, maiorCorte, (tamPop-1)/2,maiorCorteAux, geracaoDeAlteracaoDoMaior);
+                fprintf(info,"Portanto a diferenca do novo maior corte para o antigo maior corte eh de: %d\n",diferenca);
+                geracaoDeAlteracaoDoMaior = geracao;
+                semconvergencias = 0;
+            }
+
+            printf("\nBusca local no cromossomo %d:\n",2);
+            ProcuraMelhorSolucaoNoMelhorCromossomo(info, graf, grafreserva, populacao, novapopulacao, valoresCortesNovaPopulacao, valoresCortesPopulacao, tamPop, tamCromossomo, 2); //segundaPosição
+            if(maiorCorteAux < valoresCortesPopulacao[0]){
+                maiorCorte = valoresCortesPopulacao[0];
+                diferenca = maiorCorte - maiorCorteAux;
+                diferencaTotal += diferenca;
+                fprintf(info,"\nApós um peridodo de %d gerações sem convergência, na geracao %d o maior corte maximo sera %d, encontrado na alteração do subconjunto de um gene, substituindo o antigo maior corte maximo do cromossomo da segunda posição da população, que tem valor de %d, e foi encontrado na geração %d.\n", numgeracoes/5, geracao, maiorCorte, maiorCorteAux, geracaoDeAlteracaoDoMaior);
+                fprintf(info,"Portanto a diferenca do novo maior corte para o antigo maior corte eh de: %d\n",diferenca);
+                geracaoDeAlteracaoDoMaior = geracao;
+                semconvergencias = 0;
+            }
+
+            if(semconvergencias >= (numgeracoes/5)*2){
+                fprintf(info,"\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\n");
+                fprintf(info,"Parou devido a um periodo de %d gerações sem convergências.",semconvergencias);
+                break;
+            }
+
+            //printf("Parou devido a falta de convergencia.");
+            //fprintf(info,"\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\n");
+            //fprintf(info, "\nDevido um periodo de %d gerações sem convergência na população, o código parou na geração %d.", numgeracoes/5,geracao);
+            //break;
+        }
 
         printf("\nPopulacao que esta sendo trabalhada:\n");
         //imprimirMatriz(graf,populacao,tamPop,valoresCortesNovaPopulacao);
@@ -360,7 +486,7 @@ void main()
             geracaoDeAlteracaoDoMaior = geracao;
 
             maiorCorteAux = maiorCorte;
-            ProcuraMelhorSolucaoNoMelhorCromossomo(info, graf, grafreserva, populacao, novapopulacao, valoresCortesNovaPopulacao, valoresCortesPopulacao, tamPop, tamCromossomo);
+            ProcuraMelhorSolucaoNoMelhorCromossomo(info, graf, grafreserva, populacao, novapopulacao, valoresCortesNovaPopulacao, valoresCortesPopulacao, tamPop, tamCromossomo, 0);
             if(maiorCorteAux < valoresCortesPopulacao[0]){
                 maiorCorte = valoresCortesPopulacao[0];
                 diferenca = maiorCorte - maiorCorteAux;
@@ -373,7 +499,7 @@ void main()
             semconvergencias = 0;
         }else{
             semconvergencias++;
-            ProcuraMelhorSolucaoNoMelhorCromossomo(info, graf, grafreserva, populacao, novapopulacao, valoresCortesNovaPopulacao, valoresCortesPopulacao, tamPop, tamCromossomo);
+            ProcuraMelhorSolucaoNoMelhorCromossomo(info, graf, grafreserva, populacao, novapopulacao, valoresCortesNovaPopulacao, valoresCortesPopulacao, tamPop, tamCromossomo, 0);
             if(maiorCorteAux < valoresCortesPopulacao[0]){
                 maiorCorte = valoresCortesPopulacao[0];
                 diferenca = maiorCorte - maiorCorteAux;
@@ -400,7 +526,7 @@ void main()
             semconvergencias = 0;
         }*/
         //verificar se houve convergência observando apenas o topo
-    }
+    //}
 
 
     //calcula entre os maiores cortes de cromossomos no conjunto selecionado
