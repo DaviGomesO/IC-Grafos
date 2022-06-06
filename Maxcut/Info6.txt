@@ -1,0 +1,6 @@
+O maior valor de corte da população inicial é de: 23.
+
+=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
+Parou devido a um periodo de 40 gerações sem convergências.
+A diferença total do corte maximo encontrado na população inicial para o último corte maximo encontrado na geração 0 é de: 0
+Cromossomo - [azul][vermelho][vermelho][azul] - Valor do corte Maximo: 23
