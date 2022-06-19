@@ -158,15 +158,20 @@ void crossover(GRAFO *gr, int **novapopulacao, int **populacao, int geracao, int
         int genealeat1 = tamCromossomo+1, genealeat2 = tamCromossomo+1;
         //esse formato consegui deixar mais aleatorio sem apresentar sorteios viciados
         srand(rand());
+
         while(cromossomoaleat1 > tamPop && cromossomoaleat2 > tamPop){
             cromossomoaleat1 = rand()%tamPop;
             cromossomoaleat2 = rand()%tamPop;
+            printf("\ncromossomos escolhidos: %d e %d",cromossomoaleat1,cromossomoaleat2);
+
             //garantindo que os dois cromossomos sorteados não sejam o mesmo
             //o ou é para garantir que os dois cromossomos não sejam a mesma estrutura, ou seja, não tenham os mesmos genes
             //pois fazendo uma combinação entre os dois, irá gerar o mesmo cromossomo
             //portanto ajusta o valor das variaveis para continuar sorteando aleatoriamente
-            if((cromossomoaleat1 == cromossomoaleat2) || conferirCromossomo(populacao[cromossomoaleat1],populacao[cromossomoaleat2],tamCromossomo) == tamCromossomo)
-                cromossomoaleat1 = cromossomoaleat2 = tamPop+1;
+            if((cromossomoaleat1 == cromossomoaleat2))
+                cromossomoaleat1 = cromossomoaleat2 = tamPop+1;             /*estou tirando essa condicional para permitir que o crossover ocorra com cromossomos iguais
+                                                                            if((cromossomoaleat1 == cromossomoaleat2) || conferirCromossomo(populacao[cromossomoaleat1],populacao[cromossomoaleat2],tamCromossomo) == tamCromossomo)
+                                                                            */
         }
         //aqui só usei para ajustar em ordem crescente
         if(cromossomoaleat1 > cromossomoaleat2){
@@ -187,11 +192,6 @@ void crossover(GRAFO *gr, int **novapopulacao, int **populacao, int geracao, int
             genealeat1 = genealeat2;
             genealeat2 = aux;
         }
-        /*if(geracao == 1){
-            printf("\nCombinando os genes %d e %d dos cromossomos %d e %d, da populacao inicial.\n",genealeat1+1,genealeat2+1,cromossomoaleat1,cromossomoaleat2);
-        }else{
-            printf("\nCombinando os genes %d e %d dos cromossomos %d e %d, da geracao anterior.\n",genealeat1+1,genealeat2+1,cromossomoaleat1,cromossomoaleat2);
-        }*/
 
         //criei esses dois vetores para receber o cromossomo sorteado da população mais na frente
         int *novoCromossomo1, *novoCromossomo2;
@@ -203,28 +203,6 @@ void crossover(GRAFO *gr, int **novapopulacao, int **populacao, int geracao, int
             novoCromossomo2[i] = novapopulacao[cromossomoaleat2][i];
         }
 
-        //estou imprimindo esses dois cromossomos para confirmar se pegou certo
-       /* printf("\nCromossomo %d - ",cromossomoaleat1);
-        for(int j = 0; j<tamCromossomo; j++){
-            printf("[");
-            if(novoCromossomo1[j] == azul)
-                printf("azul");
-            else if(novoCromossomo1[j] == vermelho)
-                printf("vermelho");
-            printf("]");
-        }
-
-        printf("\nCromossomo %d - ",cromossomoaleat2);
-        for(int j = 0; j<tamCromossomo; j++){
-            printf("[");
-            if(novoCromossomo2[j] == azul)
-                printf("azul");
-            else if(novoCromossomo2[j] == vermelho)
-                printf("vermelho");
-            printf("]");
-        }
-        */
-
         //vou adicionar ao final da população e depois ordenar para pegar os tamPop's primeiros
 
         //aqui faço as combinações, alterando apenas nos vetores criados dentro da função
@@ -233,29 +211,6 @@ void crossover(GRAFO *gr, int **novapopulacao, int **populacao, int geracao, int
         novoCromossomo1[genealeat1] = populacao[cromossomoaleat2][genealeat1];
         novoCromossomo1[genealeat2] = populacao[cromossomoaleat2][genealeat2];
 
-        /*
-        //imprimo os vetores combinados
-        printf("\nNovo cromossomo gerado - ");
-        for(int j = 0; j<tamCromossomo; j++){
-            printf("[");
-            if(novoCromossomo1[j] == azul)
-                printf("azul");
-            else if(novoCromossomo1[j] == vermelho)
-                printf("vermelho");
-            printf("]");
-        }
-
-        printf("\nNovo cromossomo gerado - ");
-        for(int j = 0; j<tamCromossomo; j++){
-            printf("[");
-            if(novoCromossomo2[j] == azul)
-                printf("azul");
-            else if(novoCromossomo2[j] == vermelho)
-                printf("vermelho");
-            printf("]");
-        }
-        printf("\n\n");
-        */
         for(int i = 0; i<tamCromossomo; i++){
             novapopulacao[geraCromossomo][i] = novoCromossomo1[i];
             novapopulacao[geraCromossomo+1][i] = novoCromossomo2[i];
@@ -266,7 +221,7 @@ void crossover(GRAFO *gr, int **novapopulacao, int **populacao, int geracao, int
 
     (*probCruzamento) = (*probCruzamento)-((*probCruzamento)*0.03);
     (*probMutacao) = (*probMutacao)+((*probMutacao)*0.05);
-    //printf("\n%0.2f x %0.2f\n",(*probCruzamento),(*probMutacao));
+
     //mais na frente levará esse vetor novapopulação para conferir se esses cromossomos gerados estão ou não na população geral
 }
 
@@ -598,6 +553,105 @@ void apresentarMelhoresCromossomos(GRAFO *graf, int *melhoresValoresCorte, int *
     imprimirMatriz(graf,melhoresSolucoes,tamPop, melhoresValoresCorte);
     for(int i = 0; i < tamPop; i++)
         printf("\nvalor de corte do cromossomo %d entre os melhores: %d",i,melhoresValoresCorte[i]);
+}
+
+void BuscaLocal(FILE *info, GRAFO *graf, GRAFO *grafreserva, int **populacao, int **novapopulacao, int *valoresCortesNovaPopulacao, int *valoresCortesPopulacao, int tamPop, int tamCromossomo, int pos){
+    printf("\nBusca local no cromossomo %d:\n",pos+1);
+    //aqui irei verificar a possibilidade para uma geração de algum cromossomo melhor que o atual melhor, tendo como base esse atual melhor.
+    // alterando cada vértice para o subconjunto contrario ao atual
+    int **matrizParaVerificarAlteracaoDeSubconjunto = (int**)malloc(graf->vertices*sizeof(int*));
+    for(int i = 0; i < graf->vertices; i++){
+        matrizParaVerificarAlteracaoDeSubconjunto[i] = (int*)malloc(graf->vertices*sizeof(int));
+    }
+    int contador = 0;
+    int *valoresDosCromossomosQueHouveAlteracao = (int*)malloc(graf->vertices*sizeof(int));
+    int *melhorCromossomoAtual = (int*)malloc(graf->vertices*sizeof(int));
+
+    for(int i = 0; i<graf->vertices;i++){
+        melhorCromossomoAtual[i] = populacao[pos][i];
+    }
+
+    if(pos == 0){
+        printf("\nO valor de corte do melhor cromossomo atual eh: %d\n", corteDoCromossomo(graf,melhorCromossomoAtual));
+    }else{
+        printf("\nO valor de corte do cromossomo %d eh: %d\n", pos+1, corteDoCromossomo(graf,melhorCromossomoAtual));
+    }
+    for(int i = 0; i < graf->vertices; i++){
+        int Cint = 0, Cext = 0;
+        ADJACENCIA *aux = grafreserva->adj[i].cab;
+        if(melhorCromossomoAtual[i] == azul){
+            if (aux != NULL){
+                while(aux != NULL){
+                    //printf("%d ",aux->vertice);
+                    if (melhorCromossomoAtual[aux->vertice] == azul){
+                        Cint += aux->peso;
+                    }else if (melhorCromossomoAtual[aux->vertice] == vermelho){
+                        Cext += aux->peso;
+                    }
+                    aux = aux->prox;
+                }
+            }
+        }else if(melhorCromossomoAtual[i] == vermelho){
+            if (aux != NULL){
+                while (aux != NULL){
+                    //printf("%d ",aux->vertice);
+                    if (melhorCromossomoAtual[aux->vertice] == vermelho){
+                        Cint += aux->peso;
+                    }
+                    else if (melhorCromossomoAtual[aux->vertice] == azul){
+                        Cext += aux->peso;
+                    }
+                    aux = aux->prox;
+                }
+            }
+        }
+        //printf("\nValor do corte interno envolvendo o gene %d eh: %d. E o externo envolvendo o mesmo eh: %d\n",i,Cint,Cext);
+        if(Cint > Cext){
+            int *PossivelNovoCromossomoMelhor = (int*)malloc(graf->vertices*sizeof(int));
+            if(melhorCromossomoAtual[i] == azul){
+                PossivelNovoCromossomoMelhor[i] = vermelho;
+            }else if(melhorCromossomoAtual[i] == vermelho){
+                PossivelNovoCromossomoMelhor[i] = azul;
+            }
+            for(int j = 0; j <graf->vertices; j++){
+                if( j != i ){
+                    PossivelNovoCromossomoMelhor[j] = melhorCromossomoAtual[j];
+                }
+                matrizParaVerificarAlteracaoDeSubconjunto[contador][j] = PossivelNovoCromossomoMelhor[j];
+            }
+            valoresDosCromossomosQueHouveAlteracao[contador] = corteDoCromossomo(graf,matrizParaVerificarAlteracaoDeSubconjunto[contador]);
+            /*for(int j = 0; j<graf->vertices;j++){
+                printf("[");
+                if(matrizParaVerificarAlteracaoDeSubconjunto[contador][j] == azul){
+                    printf("azul");
+                }else if(matrizParaVerificarAlteracaoDeSubconjunto[contador][j] == vermelho){
+                    printf("vermelho");
+                }
+                printf("]");
+            }
+            printf(" - Valor do corte Maximo: %d\n",valoresDosCromossomosQueHouveAlteracao[contador]);*/
+
+            for(int j = 0; j<graf->vertices;j++){
+                novapopulacao[tamPop+contador][j] = matrizParaVerificarAlteracaoDeSubconjunto[contador][j];
+                valoresCortesNovaPopulacao[tamPop+contador] = valoresDosCromossomosQueHouveAlteracao[contador];
+            }
+            fprintf(info,"\nAo substituir o gene %d de subconjunto, houve uma melhora no valor do corte máximo, passando de %d para %d.\n", i+1,corteDoCromossomo(graf,melhorCromossomoAtual), valoresCortesNovaPopulacao[tamPop+contador]);
+            contador++;
+        }
+    }
+
+    if(contador > 0){
+        insertion_sort(valoresCortesNovaPopulacao, novapopulacao, tamPop+contador, tamCromossomo);
+
+        for(int i = 0; i < tamPop; i++){
+            for(int j = tamCromossomo-1; j >= 0; j--){
+                populacao[i][j] = novapopulacao[i][j];
+            }
+            valoresCortesPopulacao[i] = valoresCortesNovaPopulacao[i];
+        }
+        printf("\nApos a verificacao de alteracao de subconjunto de um gene, foi encontrado um novo melhor corte, que eh: %d", valoresCortesPopulacao[0]);
+        fprintf(info,"Portanto o novo melhor valor de corte máximo é: %d.\n",valoresCortesPopulacao[0]);
+    }
 }
 
 #endif // OPERACOESAG_H_INCLUDED
