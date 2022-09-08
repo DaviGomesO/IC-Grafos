@@ -225,16 +225,42 @@ void conferirRestricao(GRAFO *grafo, int **populacao, int *valoresCortePopulacao
     //ainda tenho que passar os valores de corte dos cromossomos aceitos
 }
 
+void informacoesMelhorCromossomo(FILE *info, int geracao, int* valoresCortesPopulacao, int OperacaoMelhorCromossomoEncontrado, int* QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo){
+    /*fprintf(info,"\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
+    if(geracao>0) fprintf(info,"Na geração %d, o melhor cromossomo atual tem valor igual a: %d",geracao, valoresCortesPopulacao[0]);
+    else fprintf(info,"Na geração inicial, o melhor cromossomo atual tem valor igual a: %d",valoresCortesPopulacao[0]);
+    */
+    if(OperacaoMelhorCromossomoEncontrado == 1){
+        //fprintf(info,"\nO melhor cromossomo atual foi encontrado ainda na população inicial.\n");
+        QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[0]++;
+    }else if(OperacaoMelhorCromossomoEncontrado == 2){
+        //fprintf(info,"\nO melhor cromossomo atual foi encontrado na operação de mutação.\n");
+        QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[1]++;
+    }else if(OperacaoMelhorCromossomoEncontrado == 3){
+        //fprintf(info,"\nO melhor cromossomo atual foi encontrado na operação de crossover.\n");
+        QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[2]++;
+    }else if(OperacaoMelhorCromossomoEncontrado == 4){
+        //fprintf(info,"\nO melhor cromossomo atual foi encontrado na operação de busca local.\n");
+        QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[3]++;
+    }
+    //fprintf(info,"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
+}
+
 void main()
 {
+    clock_t tem = clock(); //armazena temp
+
     FILE *arq;
     FILE *info;
-    arq = fopen("Exemplo.txt", "rt");
-    info = fopen("Informações/InfoTeste1906.txt", "wt");
+    FILE *resumo;
+    arq = fopen("Testes/g05_80_0.txt", "rt");
+    info = fopen("Informações/Testes-g05_80_0/Crossover percentual/(62) - Teste com criação de população normal, mutação em 2 genes, com busca a partir de 5 convergências com ilha.txt", "wt");
+    resumo = fopen("Informações/Testes-g05_80_0/Crossover percentual/resumo 62.txt", "wt");
+    int periodoSemConvergencia = 5;
     GRAFO *graf, *grafreserva;
     char *result;
     int linha;
-    int numgeracoes = 100;
+    int numgeracoes = 200;
 
     // Se houver erro na abertura
     if (arq == NULL)
@@ -247,6 +273,13 @@ void main()
     else{
         printf("Problemas na criação do arquivo\n");
         return 1;
+    }
+
+    if(resumo != NULL)
+        printf("Arquivo de informacoes criado com sucesso!!\n");
+    else{
+        printf("Problemas na criação do arquivo\n");
+        return 2;
     }
 
     linha = 1;
@@ -269,10 +302,10 @@ void main()
         else
         {
           result = fscanf(arq, "%d%d%d", &orig, &dest, &peso);
-          criaAresta(graf, orig, dest, peso,0);
-          criaAresta(grafreserva, orig, dest, peso,1);
-          //criaAresta(graf, orig-1, dest-1, peso,0);
-          //criaAresta(grafreserva, orig-1, dest-1, peso,1);
+          //criaAresta(graf, orig, dest, peso,0);
+          //criaAresta(grafreserva, orig, dest, peso,1);
+          criaAresta(graf, orig-1, dest-1, peso,0);
+          criaAresta(grafreserva, orig-1, dest-1, peso,1);
         }
         linha++;
       }
@@ -310,6 +343,9 @@ void main()
 
     //int posMaior = maiorCorteMelhores(valoresCortesPopulacao, tamPop);
     int maiorCorte = valoresCortesPopulacao[0];
+    fprintf(resumo,"Valor do corte máximo ao decorrer das gerações...");
+    fprintf(resumo,"\nGeração : maior corte máximo");
+    fprintf(resumo,"\n%d : %d",0, maiorCorte);
     fprintf(info, "O maior valor de corte da população inicial é de: %d.\n",maiorCorte);
     int diferenca = 0, geracaoDeAlteracaoDoMaior = 0, diferencaTotal = 0;
     int semconvergencias = 0;
@@ -339,6 +375,7 @@ void main()
         fprintf(info,"\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\n");
     }*/
 
+    ///*
     //ilha
     int **ilha = (int**)malloc(tamPop * sizeof(int*));
     for(int i = 0; i < tamPop; i++){
@@ -370,70 +407,89 @@ void main()
     }else{
         printf("\nNenhum cromossomo foi aceito.\n");
     }
+    //*/
 
     int OperacaoMelhorCromossomoEncontrado = 1;
     int operacaoAtual = 1;
+
+    int *QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo = (int*)malloc(4*sizeof(int));
+
+    QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[0] = QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[1] = QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[2] = QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[3] = 0;
+
+    informacoesMelhorCromossomo(info, 0, valoresCortesPopulacao, OperacaoMelhorCromossomoEncontrado, QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo);
 
     for(int geracao = 1; geracao <= numgeracoes; geracao++){
         printf("\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\nGeracao %d:",geracao);
 
         //quando estiver a um certo periodo de gerações sem convergências na população, irá recriar e se nessa nova população conter algum cromossomo diferente da população geral, será utilizada esta.
         //utilizo para fazer o código parar e não gerar mais populações
-        if(semconvergencias >= numgeracoes/5){
+        if(semconvergencias >= periodoSemConvergencia){
             maiorCorteAux = maiorCorte;
             BuscaLocal(info, graf, grafreserva, populacao, novapopulacao, valoresCortesNovaPopulacao, valoresCortesPopulacao, tamPop, tamCromossomo, tamPop-1); //ultimo cromossomoif(maiorCorteAux < valoresCortesPopulacao[0]){
             if(maiorCorteAux < valoresCortesPopulacao[0]){
                 OperacaoMelhorCromossomoEncontrado = 4;
-                maiorCorteAux = maiorCorte = valoresCortesPopulacao[0];
+                maiorCorte = valoresCortesPopulacao[0];
                 diferenca = maiorCorte - maiorCorteAux;
                 diferencaTotal += diferenca;
-                fprintf(info,"\nApós um peridodo de %d gerações sem convergência, na geracao %d o maior corte maximo sera %d, encontrado na alteração do subconjunto de um gene, substituindo o antigo maior corte maximo do cromossomo da ultima posição da população, que tem valor de %d, e foi encontrado na geração %d.\n", numgeracoes/5,geracao, maiorCorte, maiorCorteAux,geracaoDeAlteracaoDoMaior);
+                fprintf(info,"\nApós um peridodo de %d gerações sem convergência, na geracao %d o maior corte maximo sera %d, encontrado na alteração do subconjunto de um gene, substituindo o antigo maior corte maximo do cromossomo da ultima posição da população, que tem valor de %d, e foi encontrado na geração %d.\n", semconvergencias,geracao, maiorCorte, maiorCorteAux,geracaoDeAlteracaoDoMaior);
                 fprintf(info,"Portanto a diferenca do novo maior corte para o antigo maior corte eh de: %d\n",diferenca);
-                geracaoDeAlteracaoDoMaior = geracao;
+                fprintf(resumo,"\n%d : %d",geracao, maiorCorte);
+                //geracaoDeAlteracaoDoMaior = geracao;
                 semconvergencias = 0;
             }
 
-
+            maiorCorteAux = maiorCorte;
             BuscaLocal(info, graf, grafreserva, populacao, novapopulacao, valoresCortesNovaPopulacao, valoresCortesPopulacao, tamPop, tamCromossomo, (tamPop-1)/2); //posição intermediaria
             if(maiorCorteAux < valoresCortesPopulacao[0]){
                 OperacaoMelhorCromossomoEncontrado = 4;
-                maiorCorteAux = maiorCorte = valoresCortesPopulacao[0];
+                maiorCorte = valoresCortesPopulacao[0];
                 diferenca = maiorCorte - maiorCorteAux;
                 diferencaTotal += diferenca;
-                fprintf(info,"\nApós um peridodo de %d gerações sem convergência, na geracao %d o maior corte maximo sera %d, encontrado na alteração do subconjunto de um gene, substituindo o antigo maior corte maximo do cromossomo da posição %d da população, que tem valor de %d, e foi encontrado na geração %d.\n", numgeracoes/5,geracao, maiorCorte, (tamPop-1)/2,maiorCorteAux, geracaoDeAlteracaoDoMaior);
+                fprintf(info,"\nApós um peridodo de %d gerações sem convergência, na geracao %d o maior corte maximo sera %d, encontrado na alteração do subconjunto de um gene, substituindo o antigo maior corte maximo do cromossomo da posição %d da população, que tem valor de %d, e foi encontrado na geração %d.\n", semconvergencias,geracao, maiorCorte, (tamPop-1)/2,maiorCorteAux, geracaoDeAlteracaoDoMaior);
                 fprintf(info,"Portanto a diferenca do novo maior corte para o antigo maior corte eh de: %d\n",diferenca);
-                geracaoDeAlteracaoDoMaior = geracao;
+                fprintf(resumo,"\n%d : %d",geracao, maiorCorte);
+                //geracaoDeAlteracaoDoMaior = geracao;
                 semconvergencias = 0;
             }
 
+            maiorCorteAux = maiorCorte;
             BuscaLocal(info, graf, grafreserva, populacao, novapopulacao, valoresCortesNovaPopulacao, valoresCortesPopulacao, tamPop, tamCromossomo, 1); //segundaPosição
             if(maiorCorteAux < valoresCortesPopulacao[0]){
                 OperacaoMelhorCromossomoEncontrado = 4;
                 maiorCorte = valoresCortesPopulacao[0];
                 diferenca = maiorCorte - maiorCorteAux;
                 diferencaTotal += diferenca;
-                fprintf(info,"\nApós um peridodo de %d gerações sem convergência, na geracao %d o maior corte maximo sera %d, encontrado na alteração do subconjunto de um gene, substituindo o antigo maior corte maximo do cromossomo da segunda posição da população, que tem valor de %d, e foi encontrado na geração %d.\n", numgeracoes/5, geracao, maiorCorte, maiorCorteAux, geracaoDeAlteracaoDoMaior);
+                fprintf(info,"\nApós um peridodo de %d gerações sem convergência, na geracao %d o maior corte maximo sera %d, encontrado na alteração do subconjunto de um gene, substituindo o antigo maior corte maximo do cromossomo da segunda posição da população, que tem valor de %d, e foi encontrado na geração %d.\n", semconvergencias, geracao, maiorCorte, maiorCorteAux, geracaoDeAlteracaoDoMaior);
                 fprintf(info,"Portanto a diferenca do novo maior corte para o antigo maior corte eh de: %d\n",diferenca);
-                geracaoDeAlteracaoDoMaior = geracao;
+                fprintf(resumo,"\n%d : %d",geracao, maiorCorte);
+                //geracaoDeAlteracaoDoMaior = geracao;
                 semconvergencias = 0;
             }
 
+            maiorCorteAux = maiorCorte;
             BuscaLocal(info, graf, grafreserva, populacao, novapopulacao, valoresCortesNovaPopulacao, valoresCortesPopulacao, tamPop, tamCromossomo, 0);
             if(maiorCorteAux < valoresCortesPopulacao[0]){
                 OperacaoMelhorCromossomoEncontrado = 4;
                 maiorCorte = valoresCortesPopulacao[0];
                 diferenca = maiorCorte - maiorCorteAux;
                 diferencaTotal += diferenca;
-                fprintf(info,"\nApós um peridodo de %d gerações sem convergência, na geracao %d o maior corte maximo sera %d, encontrado na alteração do subconjunto de um gene, substituindo o antigo maior corte maximo do cromossomo da primeira posição da população, que tem valor de %d, e foi encontrado na geração %d.\n", numgeracoes/5,geracao, maiorCorte,maiorCorteAux, geracaoDeAlteracaoDoMaior);
+                fprintf(info,"\nApós um peridodo de %d gerações sem convergência, na geracao %d o maior corte maximo sera %d, encontrado na alteração do subconjunto de um gene, substituindo o antigo maior corte maximo do cromossomo da primeira posição da população, que tem valor de %d, e foi encontrado na geração %d.\n", semconvergencias,geracao, maiorCorte,maiorCorteAux, geracaoDeAlteracaoDoMaior);
                 fprintf(info,"Portanto a diferenca do novo maior corte para o antigo maior corte eh de: %d\n",diferenca);
+                fprintf(resumo,"\n%d : %d",geracao, maiorCorte);
                 semconvergencias = 0;
             }
 
-            if(semconvergencias >= (numgeracoes/5)*2){
+            //ideia: fazer uma busca local em um cromossomo aleatorio e diferente dos anteriores (tamPop/2, tamPop, 0, 1).
+
+            if(semconvergencias == 0){
+                geracaoDeAlteracaoDoMaior = geracao;
+            }
+
+            /*if(semconvergencias >= (numgeracoes/5)*2){
                 fprintf(info,"\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\n");
                 fprintf(info,"Parou devido a um periodo de %d gerações sem convergências.",semconvergencias);
                 break;
-            }
+            }*/
         }
 
         printf("\nPopulacao que esta sendo trabalhada:\n");
@@ -441,11 +497,13 @@ void main()
 
         if(probCruzamento <= probMutacao){
             operacaoAtual = 2;
-            mutacao(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao, valoresCortesNovaPopulacao);
+            //mutacao(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao, valoresCortesNovaPopulacao);
+            //mutacao1gene(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao, valoresCortesNovaPopulacao);
+            mutacao2gene(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao, valoresCortesNovaPopulacao);
         }else{
             operacaoAtual = 3;
-            crossover(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao,valoresCortesNovaPopulacao);
-            //crossoverPercentual(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao,valoresCortesNovaPopulacao);
+            //crossover(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao,valoresCortesNovaPopulacao);
+            crossoverPercentual(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao,valoresCortesNovaPopulacao);
             //crossoverPrevaleceIgualdade(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao,valoresCortesNovaPopulacao);
         }
 
@@ -477,6 +535,7 @@ void main()
             fprintf(info,"\n=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~\n");
             fprintf(info,"\nNa geracao %d o maior corte maximo sera %d, substituindo o antigo maior corte maximo, que tem valor de %d, e foi encontrado na geracao %d.\n", geracao, maiorCorte, maiorCorteAux,geracaoDeAlteracaoDoMaior);
             fprintf(info,"Portanto a diferenca do novo maior corte para o antigo maior corte eh de: %d\n",diferenca);
+            fprintf(resumo,"\n%d : %d",geracao, maiorCorte);
             geracaoDeAlteracaoDoMaior = geracao;
             semconvergencias = 0;
         }else{
@@ -497,7 +556,8 @@ void main()
             }*/
         }
 
-        //confiro novamente se algum desses cromossomos pode ser um candidato a entrar na ilha
+
+        ///*//confiro novamente se algum desses cromossomos pode ser um candidato a entrar na ilha
         conferirRestricao(grafreserva,populacao, valoresCortesPopulacao, tamPop,tamCromossomo,ilha, valoresCorteIlha,&qtdCromossomosAceitos);
 
         if(qtdCromossomosAceitos > 0){
@@ -517,21 +577,10 @@ void main()
             }
         }else{
             printf("\nNenhum cromossomo foi aceito.\n");
-        }
-        fprintf(info,"\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
-        fprintf(info,"Na geração %d, o melhor cromossomo atual tem valor igual a: %d",geracao, valoresCortesPopulacao[0]);
-        if(OperacaoMelhorCromossomoEncontrado == 1){
-            fprintf(info,"\nO melhor cromossomo atual foi encontrado ainda na população inicial.\n");
-        }else if(OperacaoMelhorCromossomoEncontrado == 2){
-            fprintf(info,"\nO melhor cromossomo atual foi encontrado na operação de mutação.\n");
-        }else if(OperacaoMelhorCromossomoEncontrado == 3){
-            fprintf(info,"\nO melhor cromossomo atual foi encontrado na operação de crossover.\n");
-        }else if(OperacaoMelhorCromossomoEncontrado == 4){
-            fprintf(info,"\nO melhor cromossomo atual foi encontrado na operação de busca local.\n");
-        }
-        fprintf(info,"\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
+        }//*/
+        informacoesMelhorCromossomo(info, geracao, valoresCortesPopulacao, OperacaoMelhorCromossomoEncontrado, QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo);
     }
-
+    fprintf(resumo,"\n%d : %d",200, maiorCorte);
 
     //calcula entre os maiores cortes de cromossomos no conjunto selecionado
     int cortemaxMelhores = 0, posCromossomoMelhoresCorteMax = -1;
@@ -559,8 +608,26 @@ void main()
     }
     fprintf(info," - Valor do corte Maximo: %d\n",valoresCortesPopulacao[0]);
 
+    fprintf(info,"\nForam aceitos %d cromossomos na ilha.\n",qtdCromossomosAceitos);
+    fprintf(resumo,"\nCromossomos aceitos na ilha: %d",qtdCromossomosAceitos);
+    fprintf(resumo,"\nOperação: vezes encontradas");
+    fprintf(info,"O melhor cromossomo foi encontrado %d vezes ainda na população inicial.\nO melhor cromossomo foi encontrado %d vezes por meio da operação de mutação.\nO melhor cromossomo foi encontrado %d vezes por meio da operação de crossover.\nO melhor cromossomo foi encontrado %d vezes por meio da operação de busca local.\n",QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[0],QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[1],QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[2],QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[3]);
+    fprintf(resumo,"\nPopulação inicial: %d\nMutação: %d\nCrossover: %d\nBusca local: %d\n",QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[0],QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[1],QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[2],QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[3]);
+
+
+    tem = clock() - tem; //tempo final - tempo inicial
+    //imprime o tempo na tela
+
+    int minutos = (((double)tem)/(CLOCKS_PER_SEC/1000))/60000;
+    int segundos = (((((double)tem)/(CLOCKS_PER_SEC/1000))/60000)-minutos)*60;
+
+    printf("Tempo de execucao: ~ %d minutos e %d segundos", minutos, segundos);
+    fprintf(info,"Tempo de execucao: ~ %d minutos e %d segundos", minutos, segundos);
+    fprintf(resumo,"Tempo de execucao: ~ %d minutos e %d segundos", minutos, segundos);
+
     fclose(arq);
     fclose(info);
+    fclose(resumo);
 
     return 0;
 }
@@ -568,8 +635,11 @@ void main()
 /*
 OK - transformar a busca local em uma função no arquivo de operações AG
 OK - informar qual está sendo o valor do melhor cromossomo em cada geração
-fazer a mutação com 2 genes
-OK - identificar onde está sendo encontrado o atual melhor cromossomo*/
+OK - fazer a mutação com 2 genes - Minha mutação já está em um formato que ela pode alterar no mínimo 1 gene ou todos, ou seja, uma quantidade aleatoria de genes
+OK - identificar onde está sendo encontrado o atual melhor cromossomo
+OK - transformar as mutações para 1 gene e para 2 genes.
+fazer a nova criação de população icremental(ideia: fazer o aux->prox e multiplicar todos que estão abaixo do vértice da vez por 1, e os maiores por zero
+ver qual vai ser a comparação para atribuir 0.75 e 0.25 a cada um.*/
 
 //GULOSO
 //nova forma de iniciar a população
@@ -577,13 +647,11 @@ OK - identificar onde está sendo encontrado o atual melhor cromossomo*/
 // criar o vetor de probabilidade entre 0 e 1, com diferenças entre 0,25 e 0,75(no que viola menos)
 // sorteador de probabilidade de cair em um conjunto
 
-//mutação com 2 genes
-
 //fazer os testes tirando o código de verificação da restrição
 
-// fazer os testes com cada combinação solida, sem a mescla entre as operações
+//fazer os testes com cada combinação solida, sem a mescla entre as operações
 
-//iteração de 200, com a convergência de 5, 10 e 20(para tentar fazer a busca nos 4 pontos especificados)
+//iteração de 200, com a convergência de 5, 10 e 20 - ativar a busca local com essa quantidade sem convergência(para tentar fazer a busca nos 4 pontos especificados)
 
 //produzir um gráfico com o periodo de iterações pelo valor de corte máximo do grafo utilizado e ter informação do tempo
 
@@ -593,4 +661,6 @@ OK - identificar onde está sendo encontrado o atual melhor cromossomo*/
 Problema analisado: ao ir se afunilando as gerações e tendo uma mescla muito pequena de cromossomos, ou seja, tendo muitos cromossomos dificeis, o crossover vai chegar a um ponto que não vai funcionar pois estou ajustando ele
 para não fazer a troca de genes entre cromossomos iguais
 solução provisória: tirar a condição que evita fazer o crossover entre cromossomos iguais
+
+Padrão encontrado: chega um momento que a busca local nas mesmas posições acabam viciando e sendo apenas um extra para encontrar por acaso
 */

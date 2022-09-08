@@ -44,6 +44,106 @@ int ** criaPopulacao(GRAFO *gr, int *totalPop, int *tamPopul, int tamCromossomo)
     return populacao;
 }
 
+/*float * criaVetorProbabilidade(GRAFO* grafo, int tamCromossomo){
+    float * vetorProbabilidade = (int*)malloc(tamCromossomo*sizeof(int));
+    for(int i = 0; i < grafo->vertices; i++){
+        vetorProbabilidade[i] = 0;
+    }
+
+    float *C = (float*)malloc(grafo->vertices*sizeof(float));
+    float *Cpop = (float*)malloc(grafo->vertices*sizeof(float));
+
+
+    //calculo os valores de corte total para cada vértice
+    for(int i = 0; i < grafo->vertices; i++){
+        C[i] = 0;
+
+        ADJACENCIA *aux = grafo->adj[i].cab;
+        while(aux != NULL){
+            C[i] += aux->peso;
+            aux = aux->prox;
+        }
+
+    }
+
+    //aqui dentro irei verificar cada cromossomo da população
+    //dando enfase para o conjunto que ele pertence e aplicando a regra
+    int cont = 0;
+    for(int gene = 0; gene < tamCromossomo; gene++){
+        //inicio zerando o valor dentro do vetor na posição correspondente ao gene/vértice
+        Cpop[gene] = 0;
+        //crio a variavel aux para pegar as arestas que se ligam com o gene/vértice
+        ADJACENCIA *aux = grafo->adj[gene].cab;
+        while(aux != NULL){
+            if(aux->vertice < gene){
+                Cpop[gene] += ((aux->peso)*1);
+            }else{
+                Cpop[gene] += ((aux->peso)*0);
+            }
+            aux = aux->prox;
+        }
+
+        if(Cpop[gene] >= C[gene]/2){
+            vetorProbabilidade[gene] = 0.75;
+        }else{
+            vetorProbabilidade[gene] = 0.25;
+        }
+
+    }
+
+    return vetorProbabilidade;
+}
+
+int ** criaPopulacaoGuloso(GRAFO *gr, int *totalPop, int *tamPopul, int tamCromossomo){
+    int aleat;
+    if(gr->vertices < 3){
+        (*tamPopul) = (*totalPop);
+    }else if(gr->vertices >= 3 && gr->vertices < 10){
+        (*tamPopul) = ((*totalPop)/2);
+    }else if(gr->vertices >= 10 && gr->vertices <= 14){
+        (*tamPopul) = ((*totalPop)/4);
+    }else if(gr->vertices > 14 && gr->vertices < 100){
+        //limitar no máximo com 10000
+        (*tamPopul) = 5000;
+        if((*totalPop)/8 <= 10000){
+            (*totalPop) = 5000;
+        }else{
+            (*totalPop) = 7000;
+        }
+    }else{
+        (*tamPopul) = 7000;
+        (*totalPop) = 10000;
+    }
+    int **populacao = (int**)malloc((*tamPopul) * sizeof(int *));
+    for(int i = 0; i < (*tamPopul); i++){
+        populacao[i] = (int*)malloc(tamCromossomo * sizeof(int));
+    }
+
+    float *vetorProbabilidadeSer1 = criaVetorProbabilidade(gr,tamCromossomo);
+
+    printf("\nVetor Probabilidade de ser 1: ");
+    for(int i = 0; i < tamCromossomo; i++){
+        printf("%.2f ",vetorProbabilidadeSer1[i]);
+    }
+    printf("\n");
+
+    //geração da população aleatoria
+    srand(time(NULL));
+    int cont = 1;
+    for(int i = 0; i < (*tamPopul); i++){
+        for(int j = tamCromossomo-1; j >= 0; j--){
+            aleat = (rand() % 10)%2;
+            //printf("aleat %d = %d\n",cont,aleat);
+            if(aleat == 0){
+                populacao[i][j] = azul;
+            }else if(aleat == 1){
+                populacao[i][j] = vermelho;
+            }
+            cont++;
+        }
+    }
+    return populacao;
+}*/
 
 int conferirCromossomo(int *populacaogeral, int *populacao, int tamCromossomo){
     int aux = 0;
@@ -148,7 +248,103 @@ void mutacao(GRAFO *gr,int **novapopulacao, int **populacao, int geracao, int ta
 
     (*probCruzamento) = (*probCruzamento)+((*probCruzamento)*0.05);
     (*probMutacao) = (*probMutacao)-((*probMutacao)*0.03);
-    //printf("\n%0.2f x %0.2f\n",(*probCruzamento),(*probMutacao));
+}
+
+void mutacao1gene(GRAFO *gr,int **novapopulacao, int **populacao, int geracao, int tamPop, int tamCromossomo, float *probCruzamento, float *probMutacao, int *valoresCortesNovaPopulacao){
+    printf("\nEsta utilizando a mutacao.\n");
+    for(int geraCromossomo = tamPop; geraCromossomo < (tamPop+(tamPop/2)); geraCromossomo++){
+        int cromossomoaleat = tamPop+1, genealeat = tamCromossomo+1;
+        //int qtdGenes = tamCromossomo+1;
+        //esse formato consegui deixar mais aleatorio sem apresentar sorteios viciados
+        srand(rand());
+        while(cromossomoaleat > tamPop){
+            cromossomoaleat = rand()%tamPop;
+        }
+
+        //ajustar aqui para adicionar nas posições posteriores
+        for(int i = tamCromossomo-1; i>=0; i--){
+            novapopulacao[geraCromossomo][i] = populacao[cromossomoaleat][i];
+        }
+
+        //printf("\nSera(ao) alterado(s) %d gene(s):",qtdGenes);
+
+        genealeat = tamCromossomo+1;
+        while(genealeat > tamCromossomo){
+            genealeat = rand()%tamCromossomo;
+        }
+
+        //printf("Alterando o gene %d do cromossomo %d.\n", genealeat,cromossomoaleat);
+        //tratar o caso de quando sorteia o gene mais de uma vez para ser alterado
+        if(populacao[cromossomoaleat][genealeat] == azul){
+            //printf("(azul -> vermelho)\n");
+            novapopulacao[geraCromossomo][genealeat] = vermelho;
+        }else if(populacao[cromossomoaleat][genealeat] == vermelho){
+            //printf("(vermelho -> azul)\n");
+            novapopulacao[geraCromossomo][genealeat] = azul;
+        }
+        //printf("\n");
+
+        valoresCortesNovaPopulacao[geraCromossomo] = corteDoCromossomo(gr,novapopulacao[geraCromossomo]);
+    }
+
+    (*probCruzamento) = (*probCruzamento)+((*probCruzamento)*0.05);
+    (*probMutacao) = (*probMutacao)-((*probMutacao)*0.03);
+}
+
+void mutacao2gene(GRAFO *gr,int **novapopulacao, int **populacao, int geracao, int tamPop, int tamCromossomo, float *probCruzamento, float *probMutacao, int *valoresCortesNovaPopulacao){
+    printf("\nEsta utilizando a mutacao.\n");
+    for(int geraCromossomo = tamPop; geraCromossomo < (tamPop+(tamPop/2)); geraCromossomo++){
+        int cromossomoaleat = tamPop+1, genealeat1 = tamCromossomo+1, genealeat2 = tamCromossomo+1;
+        //int qtdGenes = tamCromossomo+1;
+        //esse formato consegui deixar mais aleatorio sem apresentar sorteios viciados
+        srand(rand());
+        while(cromossomoaleat > tamPop){
+            cromossomoaleat = rand()%tamPop;
+        }
+
+        //ajustar aqui para adicionar nas posições posteriores
+        for(int i = tamCromossomo-1; i>=0; i--){
+            novapopulacao[geraCromossomo][i] = populacao[cromossomoaleat][i];
+        }
+
+        //printf("\nSera(ao) alterado(s) %d gene(s):",qtdGenes);
+
+        genealeat1 = tamCromossomo+1;
+        genealeat2 = tamCromossomo+1;
+        while(genealeat1 > tamCromossomo && genealeat2 > tamCromossomo){
+            genealeat1 = rand()%tamCromossomo;
+            genealeat2 = rand()%tamCromossomo;
+
+            if(genealeat1 == genealeat2){
+                genealeat1 = tamCromossomo+1;
+                genealeat2 = tamCromossomo+1;
+            }
+        }
+
+        //printf("Alterando os gene %d e %d do cromossomo %d.\n", genealeat1, genealeat2,cromossomoaleat);
+        //tratar o caso de quando sorteia o gene mais de uma vez para ser alterado
+        if(populacao[cromossomoaleat][genealeat1] == azul){
+            //printf("Gene 1 - (azul -> vermelho)\n");
+            novapopulacao[geraCromossomo][genealeat1] = vermelho;
+        }else if(populacao[cromossomoaleat][genealeat1] == vermelho){
+            //printf("Gene 1 - (vermelho -> azul)\n");
+            novapopulacao[geraCromossomo][genealeat1] = azul;
+        }
+        //printf("\n");
+        if(populacao[cromossomoaleat][genealeat2] == azul){
+            //printf("Gene 2 - (azul -> vermelho)\n");
+            novapopulacao[geraCromossomo][genealeat2] = vermelho;
+        }else if(populacao[cromossomoaleat][genealeat2] == vermelho){
+            //printf("Gene 2 - (vermelho -> azul)\n");
+            novapopulacao[geraCromossomo][genealeat2] = azul;
+        }
+        //printf("\n");
+
+        valoresCortesNovaPopulacao[geraCromossomo] = corteDoCromossomo(gr,novapopulacao[geraCromossomo]);
+    }
+
+    (*probCruzamento) = (*probCruzamento)+((*probCruzamento)*0.05);
+    (*probMutacao) = (*probMutacao)-((*probMutacao)*0.03);
 }
 
 void crossover(GRAFO *gr, int **novapopulacao, int **populacao, int geracao, int tamPop, int tamCromossomo, float *probCruzamento, float *probMutacao,  int *valoresCortesNovaPopulacao){
@@ -162,7 +358,6 @@ void crossover(GRAFO *gr, int **novapopulacao, int **populacao, int geracao, int
         while(cromossomoaleat1 > tamPop && cromossomoaleat2 > tamPop){
             cromossomoaleat1 = rand()%tamPop;
             cromossomoaleat2 = rand()%tamPop;
-            printf("\ncromossomos escolhidos: %d e %d",cromossomoaleat1,cromossomoaleat2);
 
             //garantindo que os dois cromossomos sorteados não sejam o mesmo
             //o ou é para garantir que os dois cromossomos não sejam a mesma estrutura, ou seja, não tenham os mesmos genes
@@ -239,7 +434,9 @@ void crossoverPercentual(GRAFO *gr, int **novapopulacao, int **populacao, int ge
             //o ou é para garantir que os dois cromossomos não sejam a mesma estrutura, ou seja, não tenham os mesmos genes
             //pois fazendo uma combinação entre os dois, irá gerar o mesmo cromossomo
             //portanto ajusta o valor das variaveis para continuar sorteando aleatoriamente
-            if((cromossomoaleat1 == cromossomoaleat2) || conferirCromossomo(populacao[cromossomoaleat1],populacao[cromossomoaleat2],tamCromossomo) == tamCromossomo)
+
+            //tirar essa parte depois do OU
+            if((cromossomoaleat1 == cromossomoaleat2))
                 cromossomoaleat1 = cromossomoaleat2 = tamPop+1;
         }
         //aqui só usei para ajustar em ordem crescente
@@ -355,7 +552,9 @@ void crossoverPrevaleceIgualdade(GRAFO *gr, int **novapopulacao, int **populacao
             //o ou é para garantir que os dois cromossomos não sejam a mesma estrutura, ou seja, não tenham os mesmos genes
             //pois fazendo uma combinação entre os dois, irá gerar o mesmo cromossomo
             //portanto ajusta o valor das variaveis para continuar sorteando aleatoriamente
-            if((cromossomoaleat1 == cromossomoaleat2) || conferirCromossomo(populacao[cromossomoaleat1],populacao[cromossomoaleat2],tamCromossomo) == tamCromossomo)
+
+            //tirar essa parte depois do OU
+            if((cromossomoaleat1 == cromossomoaleat2))
                 cromossomoaleat1 = cromossomoaleat2 = tamPop+1;
         }
         //aqui só usei para ajustar em ordem crescente
