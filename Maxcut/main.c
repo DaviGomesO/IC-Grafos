@@ -253,10 +253,11 @@ void main()
     FILE *arq;
     FILE *info;
     FILE *resumo;
-    arq = fopen("Testes/g05_80_0.txt", "rt");
-    info = fopen("Informações/Testes-g05_80_0/Crossover percentual/(62) - Teste com criação de população normal, mutação em 2 genes, com busca a partir de 5 convergências com ilha.txt", "wt");
-    resumo = fopen("Informações/Testes-g05_80_0/Crossover percentual/resumo 62.txt", "wt");
-    int periodoSemConvergencia = 5;
+    arq = fopen("Testes/g05_60_2.txt", "rt");
+    info = fopen("Informações/Testes-g05_60_2/Crossover troca 2/(221) - Teste com criação de população normal, mutação em 1 gene, com busca a partir de 10 convergências com ilha.txt", "wt");
+    resumo = fopen("Informações/Testes-g05_60_2/Crossover troca 2/resumo 221.txt", "wt");
+    int periodoSemConvergencia = 10;
+    int comilha = 1;
     GRAFO *graf, *grafreserva;
     char *result;
     int linha;
@@ -376,36 +377,38 @@ void main()
     }*/
 
     ///*
-    //ilha
-    int **ilha = (int**)malloc(tamPop * sizeof(int*));
-    for(int i = 0; i < tamPop; i++){
-        ilha[i] = (int*)malloc(tamCromossomo*sizeof(int));
-    }
-    int *valoresCorteIlha = (int*)malloc(tamPop*sizeof(int));
-    for(int i = 0; i < tamPop; i++){
-        valoresCorteIlha[i] = 0;
-    }
-
-    int qtdCromossomosAceitos = 0;
-    conferirRestricao(grafreserva,populacao, valoresCortesPopulacao, tamPop,tamCromossomo,ilha, valoresCorteIlha,&qtdCromossomosAceitos);
-
-    if(qtdCromossomosAceitos > 0){
-        printf("\nCromossomos aceitos:\n");
-        for(int teste = 0; teste < qtdCromossomosAceitos; teste++){
-            for(int gene = 0; gene<tamCromossomo; gene++){
-                printf("[");
-                if(ilha[teste][gene] == azul){
-                    printf("azul");
-                }else if(ilha[teste][gene] == vermelho){
-                    printf("vermelho");
-                }
-                printf("]");
-            }
-            //printf("\n");
-            printf(" - Valor do corte deste cromossomo: %d\n",valoresCorteIlha[teste]);
+    if(comilha == 1){
+        //ilha
+        int **ilha = (int**)malloc(tamPop * sizeof(int*));
+        for(int i = 0; i < tamPop; i++){
+            ilha[i] = (int*)malloc(tamCromossomo*sizeof(int));
         }
-    }else{
-        printf("\nNenhum cromossomo foi aceito.\n");
+        int *valoresCorteIlha = (int*)malloc(tamPop*sizeof(int));
+        for(int i = 0; i < tamPop; i++){
+            valoresCorteIlha[i] = 0;
+        }
+
+        int qtdCromossomosAceitos = 0;
+        conferirRestricao(grafreserva,populacao, valoresCortesPopulacao, tamPop,tamCromossomo,ilha, valoresCorteIlha,&qtdCromossomosAceitos);
+
+        if(qtdCromossomosAceitos > 0){
+            printf("\nCromossomos aceitos:\n");
+            for(int teste = 0; teste < qtdCromossomosAceitos; teste++){
+                for(int gene = 0; gene<tamCromossomo; gene++){
+                    printf("[");
+                    if(ilha[teste][gene] == azul){
+                        printf("azul");
+                    }else if(ilha[teste][gene] == vermelho){
+                        printf("vermelho");
+                    }
+                    printf("]");
+                }
+                //printf("\n");
+                printf(" - Valor do corte deste cromossomo: %d\n",valoresCorteIlha[teste]);
+            }
+        }else{
+            printf("\nNenhum cromossomo foi aceito.\n");
+        }
     }
     //*/
 
@@ -498,12 +501,12 @@ void main()
         if(probCruzamento <= probMutacao){
             operacaoAtual = 2;
             //mutacao(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao, valoresCortesNovaPopulacao);
-            //mutacao1gene(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao, valoresCortesNovaPopulacao);
-            mutacao2gene(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao, valoresCortesNovaPopulacao);
+            mutacao1gene(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao, valoresCortesNovaPopulacao);
+            //mutacao2gene(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao, valoresCortesNovaPopulacao);
         }else{
             operacaoAtual = 3;
-            //crossover(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao,valoresCortesNovaPopulacao);
-            crossoverPercentual(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao,valoresCortesNovaPopulacao);
+            crossover(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao,valoresCortesNovaPopulacao);
+            //crossoverPercentual(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao,valoresCortesNovaPopulacao);
             //crossoverPrevaleceIgualdade(graf,novapopulacao,populacao,geracao,tamPop,tamCromossomo,&probCruzamento,&probMutacao,valoresCortesNovaPopulacao);
         }
 
@@ -558,25 +561,27 @@ void main()
 
 
         ///*//confiro novamente se algum desses cromossomos pode ser um candidato a entrar na ilha
-        conferirRestricao(grafreserva,populacao, valoresCortesPopulacao, tamPop,tamCromossomo,ilha, valoresCorteIlha,&qtdCromossomosAceitos);
+        if(comilha == 1){
+            conferirRestricao(grafreserva,populacao, valoresCortesPopulacao, tamPop,tamCromossomo,ilha, valoresCorteIlha,&qtdCromossomosAceitos);
 
-        if(qtdCromossomosAceitos > 0){
-            printf("\nCromossomos aceitos:\n");
-            for(int teste = 0; teste < qtdCromossomosAceitos; teste++){
-                for(int gene = 0; gene<tamCromossomo; gene++){
-                    printf("[");
-                    if(ilha[teste][gene] == azul){
-                        printf("azul");
-                    }else if(ilha[teste][gene] == vermelho){
-                        printf("vermelho");
+            if(qtdCromossomosAceitos > 0){
+                printf("\nCromossomos aceitos:\n");
+                for(int teste = 0; teste < qtdCromossomosAceitos; teste++){
+                    for(int gene = 0; gene<tamCromossomo; gene++){
+                        printf("[");
+                        if(ilha[teste][gene] == azul){
+                            printf("azul");
+                        }else if(ilha[teste][gene] == vermelho){
+                            printf("vermelho");
+                        }
+                        printf("]");
                     }
-                    printf("]");
+                    //printf("\n");
+                    printf("- Valor do corte deste cromossomo: %d\n",valoresCorteIlha[teste]);
                 }
-                //printf("\n");
-                printf("- Valor do corte deste cromossomo: %d\n",valoresCorteIlha[teste]);
+            }else{
+                printf("\nNenhum cromossomo foi aceito.\n");
             }
-        }else{
-            printf("\nNenhum cromossomo foi aceito.\n");
         }//*/
         informacoesMelhorCromossomo(info, geracao, valoresCortesPopulacao, OperacaoMelhorCromossomoEncontrado, QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo);
     }
@@ -608,8 +613,11 @@ void main()
     }
     fprintf(info," - Valor do corte Maximo: %d\n",valoresCortesPopulacao[0]);
 
-    fprintf(info,"\nForam aceitos %d cromossomos na ilha.\n",qtdCromossomosAceitos);
-    fprintf(resumo,"\nCromossomos aceitos na ilha: %d",qtdCromossomosAceitos);
+    ///*
+    if(comilha == 1){
+        fprintf(info,"\nForam aceitos %d cromossomos na ilha.\n",qtdCromossomosAceitos);
+        fprintf(resumo,"\nCromossomos aceitos na ilha: %d",qtdCromossomosAceitos);
+    }//*/
     fprintf(resumo,"\nOperação: vezes encontradas");
     fprintf(info,"O melhor cromossomo foi encontrado %d vezes ainda na população inicial.\nO melhor cromossomo foi encontrado %d vezes por meio da operação de mutação.\nO melhor cromossomo foi encontrado %d vezes por meio da operação de crossover.\nO melhor cromossomo foi encontrado %d vezes por meio da operação de busca local.\n",QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[0],QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[1],QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[2],QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[3]);
     fprintf(resumo,"\nPopulação inicial: %d\nMutação: %d\nCrossover: %d\nBusca local: %d\n",QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[0],QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[1],QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[2],QtdGeracoesParaOperacoesQueEncontraramMelhorCromossomo[3]);
